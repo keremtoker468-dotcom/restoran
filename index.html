@@ -15,74 +15,90 @@
     <meta name="twitter:description" content="See which tables are empty right now. Interactive 3D floor plans for restaurants and cafes.">
     <title>TableFinder Pro — Real-Time Table Availability</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0c0e13;
-            --surface: #15171e;
-            --surface-2: #1c1f28;
+            --bg: #0a0b0f;
+            --surface: #12141a;
+            --surface-2: #1a1c24;
+            --surface-3: #22252e;
             --border: #2a2d38;
-            --text: #e4e4e7;
-            --text-dim: #71717a;
+            --border-light: #363a48;
+            --text: #f0f0f3;
+            --text-dim: #8b8d98;
+            --text-muted: #55576a;
             --accent: #6366f1;
-            --accent-glow: rgba(99,102,241,.25);
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99,102,241,.2);
             --green: #22c55e;
-            --green-dim: rgba(34,197,94,.12);
+            --green-dim: rgba(34,197,94,.1);
+            --green-border: rgba(34,197,94,.25);
             --red: #ef4444;
-            --red-dim: rgba(239,68,68,.12);
+            --red-dim: rgba(239,68,68,.08);
+            --red-border: rgba(239,68,68,.25);
             --yellow: #eab308;
-            --radius: 14px;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow-lg: 0 20px 60px rgba(0,0,0,.5);
+            --shadow-md: 0 8px 32px rgba(0,0,0,.3);
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'DM Sans', -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text);
             height: 100vh; overflow: hidden;
         }
 
-        /* ---- LAYOUT ---- */
         .app { display: flex; height: 100vh; }
 
-        /* ---- SIDEBAR ---- */
+        /* SIDEBAR */
         .sidebar {
-            width: 380px; min-width: 380px;
+            width: 400px; min-width: 400px;
             background: var(--surface);
             border-right: 1px solid var(--border);
             display: flex; flex-direction: column;
             overflow: hidden;
-            transition: .3s;
+            transition: width .4s cubic-bezier(.4,0,.2,1), min-width .4s cubic-bezier(.4,0,.2,1);
         }
         .sidebar.collapsed { width: 0; min-width: 0; }
 
         .sidebar-header {
-            padding: 20px;
+            padding: 24px 24px 20px;
             border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(99,102,241,.04) 0%, transparent 100%);
         }
-        .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
         .brand-icon {
-            width: 42px; height: 42px;
+            width: 46px; height: 46px;
             background: linear-gradient(135deg, var(--accent), #a855f7);
-            border-radius: 12px;
+            border-radius: 13px;
             display: grid; place-items: center;
-            font-size: 20px;
+            font-size: 22px;
+            box-shadow: 0 4px 20px rgba(99,102,241,.3);
         }
         .brand h1 {
-            font-size: 20px; font-weight: 800;
-            letter-spacing: -.3px;
+            font-family: 'Playfair Display', serif;
+            font-size: 22px; font-weight: 800;
+            letter-spacing: -.5px;
         }
-        .brand h1 span { color: var(--accent); }
+        .brand h1 span { color: var(--accent-light); }
         .brand small {
             display: block; font-size: 11px;
             color: var(--text-dim); font-weight: 500;
-            text-transform: uppercase; letter-spacing: 1px;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-top: 2px;
         }
 
+        .header-row {
+            display: flex; align-items: center; justify-content: space-between;
+        }
         .live-badge {
             display: inline-flex; align-items: center; gap: 8px;
-            padding: 6px 14px;
+            padding: 7px 16px;
             background: var(--green-dim);
-            border: 1px solid rgba(34,197,94,.25);
+            border: 1px solid var(--green-border);
             border-radius: 20px;
             font-size: 12px; font-weight: 600;
             color: var(--green);
@@ -92,94 +108,132 @@
             background: var(--green);
             border-radius: 50%;
             animation: blink 2s ease infinite;
+            box-shadow: 0 0 6px var(--green);
         }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-        /* ---- SEARCH ---- */
+        .admin-link {
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 11px; font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            cursor: pointer;
+            transition: all .2s;
+            text-decoration: none;
+        }
+        .admin-link:hover {
+            border-color: var(--accent);
+            color: var(--accent-light);
+            background: var(--accent-glow);
+        }
+
+        /* SEARCH */
         .search-box {
-            padding: 16px 20px;
+            padding: 16px 24px;
             border-bottom: 1px solid var(--border);
+        }
+        .search-wrap { position: relative; }
+        .search-wrap::before {
+            content: '\1F50D'; position: absolute;
+            left: 14px; top: 50%; transform: translateY(-50%);
+            font-size: 13px; pointer-events: none;
         }
         .search-box input {
             width: 100%; padding: 12px 16px 12px 40px;
             background: var(--surface-2);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: var(--radius-sm);
             color: var(--text);
             font-family: inherit;
             font-size: 14px;
             outline: none;
-            transition: .15s;
+            transition: all .2s;
         }
-        .search-box input:focus { border-color: var(--accent); }
-        .search-box { position: relative; }
-        .search-box::before {
-            content: '🔍'; position: absolute;
-            left: 34px; top: 50%; transform: translateY(-50%);
-            font-size: 14px;
+        .search-box input::placeholder { color: var(--text-muted); }
+        .search-box input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
-        /* ---- VENUE LIST ---- */
+        /* VENUE LIST */
         .venue-list {
             flex: 1; overflow-y: auto; padding: 12px;
         }
-        .venue-list::-webkit-scrollbar { width: 6px; }
+        .venue-list::-webkit-scrollbar { width: 4px; }
         .venue-list::-webkit-scrollbar-track { background: transparent; }
-        .venue-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .venue-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
         .venue-card {
-            padding: 16px;
+            padding: 18px;
             background: var(--surface-2);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             margin-bottom: 10px;
             cursor: pointer;
-            transition: .2s;
+            transition: all .25s cubic-bezier(.4,0,.2,1);
+            position: relative;
+            overflow: hidden;
+        }
+        .venue-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent), #a855f7);
+            opacity: 0; transition: opacity .25s;
         }
         .venue-card:hover, .venue-card.active {
             border-color: var(--accent);
-            box-shadow: 0 0 20px var(--accent-glow);
+            box-shadow: 0 0 24px var(--accent-glow);
+            transform: translateY(-1px);
         }
+        .venue-card:hover::before, .venue-card.active::before { opacity: 1; }
         .venue-card .venue-name {
-            font-size: 16px; font-weight: 700;
-            margin-bottom: 4px;
+            font-family: 'Playfair Display', serif;
+            font-size: 17px; font-weight: 700;
+            margin-bottom: 6px;
         }
         .venue-card .venue-meta {
             font-size: 12px; color: var(--text-dim);
-            display: flex; gap: 12px; margin-bottom: 10px;
+            display: flex; gap: 12px; margin-bottom: 12px;
         }
         .venue-card .venue-availability {
             display: flex; justify-content: space-between;
             align-items: center;
-            padding-top: 10px;
+            padding-top: 12px;
             border-top: 1px solid var(--border);
         }
         .avail-badge {
-            padding: 4px 12px;
+            padding: 5px 14px;
             border-radius: 8px;
             font-size: 12px; font-weight: 700;
         }
-        .avail-badge.ok { background: var(--green-dim); color: var(--green); }
-        .avail-badge.low { background: var(--red-dim); color: var(--red); }
+        .avail-badge.ok { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+        .avail-badge.low { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
 
         .venue-features {
-            display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+            display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px;
         }
         .venue-features span {
-            padding: 3px 8px;
+            padding: 4px 10px;
             background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 11px; color: var(--text-dim);
         }
 
-        /* ---- TABLE FILTER BAR ---- */
+        /* FILTER BAR */
         .filter-bar {
-            padding: 12px 20px;
+            padding: 14px 24px;
             border-bottom: 1px solid var(--border);
             display: flex; gap: 8px; flex-wrap: wrap;
+            background: var(--surface);
         }
         .filter-btn {
-            padding: 6px 14px;
+            padding: 7px 16px;
             border-radius: 8px;
             border: 1px solid var(--border);
             background: transparent;
@@ -187,56 +241,55 @@
             font-family: inherit;
             font-size: 12px; font-weight: 600;
             cursor: pointer;
-            transition: .15s;
+            transition: all .2s;
         }
+        .filter-btn:hover { border-color: var(--accent-light); color: var(--text); }
         .filter-btn.active {
-            background: var(--accent);
-            border-color: var(--accent);
+            background: linear-gradient(135deg, var(--accent), #7c3aed);
+            border-color: transparent;
             color: white;
+            box-shadow: 0 2px 12px rgba(99,102,241,.3);
         }
 
-        /* ---- TABLE LIST ---- */
+        /* TABLE LIST */
         .table-list {
             flex: 1; overflow-y: auto;
             padding: 12px 20px;
         }
-        .table-list::-webkit-scrollbar { width: 6px; }
+        .table-list::-webkit-scrollbar { width: 4px; }
         .table-list::-webkit-scrollbar-track { background: transparent; }
-        .table-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .table-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
         .table-item {
-            padding: 14px;
+            padding: 14px 16px;
             background: var(--surface-2);
             border: 1px solid var(--border);
             border-radius: 12px;
             margin-bottom: 8px;
             cursor: pointer;
-            transition: .2s;
+            transition: all .2s cubic-bezier(.4,0,.2,1);
             display: flex; align-items: center; gap: 14px;
         }
         .table-item:hover, .table-item.selected {
             border-color: var(--accent);
-            box-shadow: 0 0 12px var(--accent-glow);
+            box-shadow: 0 0 16px var(--accent-glow);
+            transform: translateX(2px);
         }
         .table-item .t-num {
             width: 44px; height: 44px;
-            border-radius: 10px;
+            border-radius: var(--radius-sm);
             display: grid; place-items: center;
             font-size: 16px; font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
         }
-        .table-item .t-num.empty { background: var(--green-dim); color: var(--green); }
-        .table-item .t-num.occupied { background: var(--red-dim); color: var(--red); }
+        .table-item .t-num.empty { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+        .table-item .t-num.occupied { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
 
         .table-item .t-info { flex: 1; }
-        .table-item .t-info .t-label {
-            font-size: 14px; font-weight: 600;
-        }
-        .table-item .t-info .t-detail {
-            font-size: 12px; color: var(--text-dim); margin-top: 2px;
-        }
+        .table-item .t-info .t-label { font-size: 14px; font-weight: 600; }
+        .table-item .t-info .t-detail { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
         .table-item .t-status {
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 6px;
             font-size: 11px; font-weight: 700;
             text-transform: uppercase;
@@ -247,21 +300,24 @@
         .table-item .t-status.reserved { background: rgba(234,179,8,.12); color: var(--yellow); }
         .table-item .t-num.reserved { background: rgba(234,179,8,.12); color: var(--yellow); }
 
-        /* ---- MAIN AREA ---- */
-        .main { flex: 1; display: flex; flex-direction: column; }
+        /* MAIN AREA */
+        .main { flex: 1; display: flex; flex-direction: column; position: relative; }
 
         .main-header {
-            padding: 14px 24px;
+            padding: 16px 28px;
             background: var(--surface);
             border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
         }
-        .main-header h2 { font-size: 18px; font-weight: 700; }
-        .main-header .hint { font-size: 12px; color: var(--text-dim); }
+        .main-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px; font-weight: 700;
+        }
+        .main-header .hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
         .view-toggles { display: flex; gap: 6px; }
         .view-toggle {
-            padding: 8px 16px;
+            padding: 9px 18px;
             border-radius: 8px;
             border: 1px solid var(--border);
             background: transparent;
@@ -269,76 +325,87 @@
             font-family: inherit;
             font-size: 13px; font-weight: 600;
             cursor: pointer;
-            transition: .15s;
+            transition: all .2s;
         }
+        .view-toggle:hover { border-color: var(--accent-light); color: var(--text); }
         .view-toggle.active {
-            background: var(--accent);
-            border-color: var(--accent);
+            background: linear-gradient(135deg, var(--accent), #7c3aed);
+            border-color: transparent;
             color: white;
+            box-shadow: 0 2px 12px rgba(99,102,241,.3);
         }
 
-        /* ---- 3D CANVAS ---- */
-        .canvas-wrap {
-            flex: 1; position: relative;
-            background: var(--bg);
-        }
+        /* 3D CANVAS */
+        .canvas-wrap { flex: 1; position: relative; background: var(--bg); }
         .canvas-wrap canvas { display: block; }
 
-        /* ---- TABLE INFO OVERLAY ---- */
+        /* TABLE INFO OVERLAY */
         .table-overlay {
-            position: absolute; top: 20px; right: 20px;
+            position: absolute; top: 24px; right: 24px;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 24px;
-            min-width: 280px;
-            box-shadow: 0 10px 40px rgba(0,0,0,.4);
-            animation: fadeIn .2s ease;
+            padding: 28px;
+            min-width: 300px;
+            box-shadow: var(--shadow-lg);
             z-index: 10;
         }
-        @keyframes fadeIn {
-            from { opacity:0; transform: translateY(-10px); }
-            to { opacity:1; transform: translateY(0); }
-        }
         .table-overlay .close-btn {
-            position: absolute; top: 12px; right: 12px;
-            background: none; border: none;
-            color: var(--text-dim); font-size: 18px;
+            position: absolute; top: 14px; right: 14px;
+            background: var(--surface-2); border: 1px solid var(--border);
+            color: var(--text-dim); font-size: 14px;
+            width: 30px; height: 30px;
+            border-radius: 8px;
             cursor: pointer;
+            display: grid; place-items: center;
+            transition: all .2s;
         }
+        .table-overlay .close-btn:hover { border-color: var(--red); color: var(--red); }
         .table-overlay h3 {
-            font-size: 22px; font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
-            margin-bottom: 16px;
+            font-family: 'Playfair Display', serif;
+            font-size: 24px; font-weight: 800;
+            margin-bottom: 20px;
         }
         .table-overlay .detail-row {
             display: flex; justify-content: space-between;
-            padding: 8px 0;
+            align-items: center;
+            padding: 10px 0;
             border-bottom: 1px solid var(--border);
             font-size: 14px;
         }
         .table-overlay .detail-row:last-child { border-bottom: none; }
         .table-overlay .detail-row .label { color: var(--text-dim); }
 
-        /* ---- STATS OVERLAY ---- */
+        /* STATS OVERLAY */
         .stats-overlay {
-            position: absolute; top: 20px; left: 20px;
+            position: absolute; top: 24px; left: 24px;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 16px 20px;
+            padding: 18px 22px;
             z-index: 10;
+            box-shadow: var(--shadow-md);
+        }
+        .stats-overlay .s-title {
+            font-size: 10px; font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
         }
         .stats-overlay .s-row {
             display: flex; align-items: center; gap: 10px;
-            font-size: 13px; margin-bottom: 6px;
+            font-size: 13px; margin-bottom: 8px;
+            font-weight: 500;
         }
         .stats-overlay .s-row:last-child { margin-bottom: 0; }
-        .stats-overlay .s-dot {
-            width: 10px; height: 10px; border-radius: 3px;
+        .stats-overlay .s-dot { width: 10px; height: 10px; border-radius: 3px; }
+        .stats-overlay .s-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
         }
 
-        /* ---- SIDEBAR TOGGLE ---- */
+        /* SIDEBAR TOGGLE (mobile) */
         .sidebar-toggle {
             position: fixed; top: 14px; left: 14px; z-index: 60;
             width: 40px; height: 40px;
@@ -359,20 +426,56 @@
         .sidebar.collapsed ~ .main .sidebar-toggle,
         .sidebar:not(.collapsed) ~ .main .sidebar-toggle { left: 14px; }
 
-        /* ---- LEGEND ---- */
+        /* LEGEND */
         .legend {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 20px;
+            position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 24px;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px 24px;
+            border-radius: 12px;
+            padding: 12px 28px;
             z-index: 10;
             font-size: 12px; font-weight: 600;
+            box-shadow: var(--shadow-md);
         }
-        .legend .l-item { display: flex; align-items: center; gap: 8px; }
-        .legend .l-dot {
-            width: 12px; height: 12px; border-radius: 4px;
+        .legend .l-item { display: flex; align-items: center; gap: 8px; color: var(--text-dim); }
+        .legend .l-dot { width: 12px; height: 12px; border-radius: 4px; }
+
+        /* LOADING SCREEN */
+        .loading-screen {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 1000;
+        }
+        .loading-screen .load-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            border-radius: 18px;
+            display: grid; place-items: center;
+            font-size: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 40px rgba(99,102,241,.35);
+        }
+        .loading-screen h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px; font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .loading-screen h2 span { color: var(--accent-light); }
+        .loading-screen p { color: var(--text-dim); font-size: 14px; }
+        .loading-bar {
+            width: 200px; height: 3px;
+            background: var(--surface-2);
+            border-radius: 2px;
+            margin-top: 32px;
+            overflow: hidden;
+        }
+        .loading-bar .fill {
+            width: 0; height: 100%;
+            background: linear-gradient(90deg, var(--accent), #a855f7);
+            border-radius: 2px;
         }
 
         /* ---- VENUE DETAIL PANEL ---- */
@@ -647,7 +750,7 @@
                     <div class="l-item"><div class="l-dot" style="background:var(--green)"></div> Available</div>
                     <div class="l-item"><div class="l-dot" style="background:var(--red)"></div> Occupied</div>
                     <div class="l-item"><div class="l-dot" style="background:var(--yellow)"></div> Reserved</div>
-                    <div class="l-item"><div class="l-dot" style="background:#87ceeb"></div> Window seat</div>
+                    <div class="l-item"><div class="l-dot" style="background:#87ceeb"></div> Window</div>
                 </div>
             </div>
 
@@ -664,18 +767,35 @@
     let currentFilter = 'all';
     let sidebarOpen = true;
 
+    // ==================== LOADING ANIMATION (GSAP) ====================
+    function runLoadingAnimation() {
+        const tl = gsap.timeline();
+        tl.to('#loadingFill', { width: '100%', duration: 1.0, ease: 'power2.inOut' });
+        tl.to('#loadingScreen', {
+            opacity: 0, duration: 0.35, ease: 'power2.in',
+            onComplete: () => document.getElementById('loadingScreen').style.display = 'none'
+        });
+        tl.set('#app', { opacity: 1 });
+        tl.from('.sidebar-header', { x: -30, opacity: 0, duration: 0.5, ease: 'power3.out' });
+        tl.from('.search-box', { x: -20, opacity: 0, duration: 0.35, ease: 'power3.out' }, '-=0.3');
+        tl.from('.venue-card', { y: 20, opacity: 0, duration: 0.35, stagger: 0.06, ease: 'power3.out' }, '-=0.2');
+        tl.from('.main-header', { y: -20, opacity: 0, duration: 0.35, ease: 'power3.out' }, '-=0.4');
+        tl.from('.stats-overlay', { scale: 0.9, opacity: 0, duration: 0.35, ease: 'back.out(1.5)' }, '-=0.25');
+        tl.from('.legend', { y: 20, opacity: 0, duration: 0.35, ease: 'power3.out' }, '-=0.15');
+    }
+
     // ==================== 3D ENGINE ====================
     let scene, camera, renderer, tableMeshes = [];
-    let isDragging = false, prevMouse = { x: 0, y: 0 };
+    let isDragging = false, dragMoved = false, prevMouse = { x: 0, y: 0 };
 
     function init3D() {
         const wrap = document.getElementById('canvasWrap');
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0c0e13);
-        scene.fog = new THREE.FogExp2(0x0c0e13, 0.02);
+        scene.background = new THREE.Color(0x0a0b0f);
+        scene.fog = new THREE.FogExp2(0x0a0b0f, 0.018);
 
         camera = new THREE.PerspectiveCamera(50, wrap.clientWidth / wrap.clientHeight, 0.1, 1000);
-        camera.position.set(12, 15, 12);
+        camera.position.set(14, 16, 14);
         camera.lookAt(0, 0, 0);
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -683,19 +803,28 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.1;
         wrap.insertBefore(renderer.domElement, wrap.firstChild);
 
         // Lighting
-        scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
-        const dir = new THREE.DirectionalLight(0xffffff, 0.7);
+        const dir = new THREE.DirectionalLight(0xffffff, 0.65);
         dir.position.set(15, 25, 15);
         dir.castShadow = true;
         dir.shadow.mapSize.set(2048, 2048);
+        dir.shadow.camera.near = 0.5;
+        dir.shadow.camera.far = 60;
+        dir.shadow.camera.left = -15;
+        dir.shadow.camera.right = 15;
+        dir.shadow.camera.top = 15;
+        dir.shadow.camera.bottom = -15;
         scene.add(dir);
 
-        scene.add(new THREE.PointLight(0x6366f1, 0.4, 25).translateX(-5).translateY(8));
-        scene.add(new THREE.PointLight(0xa855f7, 0.4, 25).translateX(5).translateY(8).translateZ(5));
+        scene.add(new THREE.PointLight(0x6366f1, 0.5, 30).translateX(-5).translateY(8));
+        scene.add(new THREE.PointLight(0xa855f7, 0.4, 30).translateX(5).translateY(8).translateZ(5));
+        scene.add(new THREE.PointLight(0xffd4a0, 0.2, 20).translateY(10).translateZ(-5));
 
         buildEnvironment();
 
@@ -817,72 +946,97 @@
             renderer.setSize(wrap.clientWidth, wrap.clientHeight);
         });
 
-        // Animate
+        // Animate loop with subtle camera breathing
+        let time = 0;
+        const baseY = camera.position.y;
         (function animate() {
             requestAnimationFrame(animate);
+            time += 0.005;
+            if (!isDragging) camera.position.y = baseY + Math.sin(time) * 0.12;
             renderer.render(scene, camera);
         })();
     }
 
     function buildEnvironment() {
-        // Floor - dark concrete look
+        // Floor
         const floor = new THREE.Mesh(
-            new THREE.PlaneGeometry(20, 20),
-            new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.9, metalness: 0.1 })
+            new THREE.PlaneGeometry(24, 24),
+            new THREE.MeshStandardMaterial({ color: 0x13151b, roughness: 0.95, metalness: 0.05 })
         );
         floor.rotation.x = -Math.PI / 2;
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // Subtle grid
-        scene.add(new THREE.GridHelper(24, 24, 0x2a2d38, 0x1c1f28));
+        scene.add(new THREE.GridHelper(28, 28, 0x1e2030, 0x181a24));
 
-        // Outdoor area
+        // Outdoor patio
         const patio = new THREE.Mesh(
-            new THREE.PlaneGeometry(10, 20),
-            new THREE.MeshStandardMaterial({ color: 0x162016, roughness: 0.95 })
+            new THREE.PlaneGeometry(12, 24),
+            new THREE.MeshStandardMaterial({ color: 0x141e14, roughness: 0.95 })
         );
         patio.rotation.x = -Math.PI / 2;
-        patio.position.set(7, 0.005, 0);
+        patio.position.set(8, 0.008, 0);
         patio.receiveShadow = true;
         scene.add(patio);
 
         // Walls
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0x1c1f28, roughness: 0.85 });
-        const bw = new THREE.Mesh(new THREE.BoxGeometry(20, 5, 0.15), wallMat);
-        bw.position.set(0, 2.5, -10); bw.castShadow = true; scene.add(bw);
-        const sw = new THREE.Mesh(new THREE.BoxGeometry(0.15, 5, 20), wallMat);
-        sw.position.set(-10, 2.5, 0); sw.castShadow = true; scene.add(sw);
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1d26, roughness: 0.85 });
+        const bw = new THREE.Mesh(new THREE.BoxGeometry(24, 5, 0.15), wallMat);
+        bw.position.set(0, 2.5, -12); bw.castShadow = true; scene.add(bw);
+        const sw = new THREE.Mesh(new THREE.BoxGeometry(0.15, 5, 24), wallMat);
+        sw.position.set(-12, 2.5, 0); sw.castShadow = true; scene.add(sw);
 
-        // Accent wall strip
-        const strip = new THREE.Mesh(
-            new THREE.BoxGeometry(20, 0.1, 0.02),
-            new THREE.MeshStandardMaterial({ color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 0.6 })
-        );
-        strip.position.set(0, 1, -9.9); scene.add(strip);
+        // Neon accent strips
+        const neonMat = new THREE.MeshStandardMaterial({ color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 0.7 });
+        const s1 = new THREE.Mesh(new THREE.BoxGeometry(24, 0.08, 0.02), neonMat);
+        s1.position.set(0, 1, -11.9); scene.add(s1);
+        const s2 = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.08, 24), neonMat);
+        s2.position.set(-11.9, 1, 0); scene.add(s2);
 
         // Bar counter
         const bar = new THREE.Mesh(
-            new THREE.BoxGeometry(4, 1.2, 1),
-            new THREE.MeshStandardMaterial({ color: 0x2a1810, roughness: 0.4, metalness: 0.3 })
+            new THREE.BoxGeometry(5, 1.2, 1.2),
+            new THREE.MeshStandardMaterial({ color: 0x2a1810, roughness: 0.35, metalness: 0.3 })
         );
-        bar.position.set(-6, 0.6, -7); bar.castShadow = true; scene.add(bar);
+        bar.position.set(-7, 0.6, -8); bar.castShadow = true; scene.add(bar);
 
-        // Ceiling fixtures - neon accent
-        [-5, 0, 5].forEach(x => {
+        // Bar stools
+        const stoolMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.6 });
+        for (let i = 0; i < 4; i++) {
+            const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.06, 12), stoolMat);
+            seat.position.set(-8.5 + i * 1.2, 0.72, -6.8); seat.castShadow = true; scene.add(seat);
+            const sleg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.7, 8), stoolMat);
+            sleg.position.set(-8.5 + i * 1.2, 0.36, -6.8); scene.add(sleg);
+        }
+
+        // Ceiling lights
+        [-6, 0, 6].forEach(x => {
             const fix = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.15, 0.2, 0.3, 8),
-                new THREE.MeshStandardMaterial({ color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 0.8 })
+                new THREE.CylinderGeometry(0.15, 0.2, 0.25, 8),
+                new THREE.MeshStandardMaterial({ color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 0.9 })
             );
             fix.position.set(x, 4.9, 0); scene.add(fix);
-            const pl = new THREE.PointLight(0xeeeeff, 0.35, 10);
+            const pl = new THREE.PointLight(0xffeedd, 0.3, 12);
             pl.position.set(x, 4.5, 0); scene.add(pl);
+        });
+
+        // Planters
+        [[5, 0, -8], [5, 0, 8]].forEach(([px, py, pz]) => {
+            const planter = new THREE.Mesh(
+                new THREE.BoxGeometry(0.5, 0.6, 0.5),
+                new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.8 })
+            );
+            planter.position.set(px, 0.3, pz); planter.castShadow = true; scene.add(planter);
+            const plant = new THREE.Mesh(
+                new THREE.SphereGeometry(0.4, 8, 8),
+                new THREE.MeshStandardMaterial({ color: 0x22543d, roughness: 0.9 })
+            );
+            plant.position.set(px, 0.8, pz); scene.add(plant);
         });
     }
 
     function renderTables() {
-        // Remove old
-        tableMeshes.forEach(m => { scene.remove(m.parent || m); });
+        tableMeshes.forEach(m => scene.remove(m.parent || m));
         tableMeshes = [];
 
         const venues = TF.loadVenues();
@@ -891,17 +1045,14 @@
 
         venue.tables.forEach(table => {
             const group = new THREE.Group();
-
-            // Colors
             let color = table.status === 'empty' ? 0x22c55e : table.status === 'occupied' ? 0xef4444 : 0xeab308;
             let edgeColor = table.status === 'empty' ? 0x16a34a : table.status === 'occupied' ? 0xdc2626 : 0xca8a04;
-
             const size = table.seats === 2 ? 0.7 : table.seats <= 4 ? 1.0 : table.seats <= 6 ? 1.3 : 1.6;
 
             // Table top
             const top = new THREE.Mesh(
                 new THREE.BoxGeometry(size, 0.08, size),
-                new THREE.MeshStandardMaterial({ color, metalness: 0.35, roughness: 0.5 })
+                new THREE.MeshStandardMaterial({ color, metalness: 0.4, roughness: 0.4, emissive: color, emissiveIntensity: 0.2 })
             );
             top.position.y = 0.75;
             top.castShadow = true; top.receiveShadow = true;
@@ -911,50 +1062,61 @@
             // Glow edge
             const edge = new THREE.Mesh(
                 new THREE.BoxGeometry(size + 0.04, 0.04, size + 0.04),
-                new THREE.MeshStandardMaterial({ color: edgeColor, emissive: color, emissiveIntensity: 0.3 })
+                new THREE.MeshStandardMaterial({ color: edgeColor, emissive: color, emissiveIntensity: 0.4 })
             );
             edge.position.y = 0.73; group.add(edge);
 
-            // Leg
-            const legMat = new THREE.MeshStandardMaterial({ color: 0x2a2d38, roughness: 0.7 });
+            // Ground glow
+            const gGlow = new THREE.Mesh(
+                new THREE.PlaneGeometry(size + 0.6, size + 0.6),
+                new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.04 })
+            );
+            gGlow.rotation.x = -Math.PI / 2; gGlow.position.y = 0.01; group.add(gGlow);
+
+            // Leg + base
+            const legMat = new THREE.MeshStandardMaterial({ color: 0x2a2d38, roughness: 0.65, metalness: 0.2 });
             const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.11, 0.7, 10), legMat);
             leg.position.y = 0.35; leg.castShadow = true; group.add(leg);
             const base = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.04, 10), legMat);
             base.position.y = 0.02; group.add(base);
 
             // Chairs
-            const chairMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.7 });
-            const count = table.seats;
-            const step = (Math.PI * 2) / count;
+            const chairMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.65, metalness: 0.15 });
+            const step = (Math.PI * 2) / table.seats;
             const dist = size * 0.72;
-            for (let i = 0; i < count; i++) {
+            for (let i = 0; i < table.seats; i++) {
                 const a = i * step;
                 const cx = Math.cos(a) * dist, cz = Math.sin(a) * dist;
-                const seat = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.04, 0.32), chairMat);
-                seat.position.set(cx, 0.44, cz); seat.castShadow = true; group.add(seat);
-                const back = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.35, 0.04), chairMat);
-                back.position.set(cx + Math.cos(a) * 0.14, 0.62, cz + Math.sin(a) * 0.14);
-                back.rotation.y = a; back.castShadow = true; group.add(back);
+                const cseat = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.04, 0.32), chairMat);
+                cseat.position.set(cx, 0.44, cz); cseat.castShadow = true; group.add(cseat);
+                const cback = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.35, 0.04), chairMat);
+                cback.position.set(cx + Math.cos(a) * 0.14, 0.62, cz + Math.sin(a) * 0.14);
+                cback.rotation.y = a; cback.castShadow = true; group.add(cback);
             }
 
             // Window indicator
             if (table.hasWindow) {
                 const wi = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.07, 8, 8),
-                    new THREE.MeshStandardMaterial({ color: 0x87ceeb, emissive: 0x87ceeb, emissiveIntensity: 0.6 })
+                    new THREE.SphereGeometry(0.08, 12, 12),
+                    new THREE.MeshStandardMaterial({ color: 0x87ceeb, emissive: 0x87ceeb, emissiveIntensity: 0.8 })
                 );
-                wi.position.set(size * 0.4, 0.88, 0); group.add(wi);
+                wi.position.set(size * 0.4, 0.9, 0); group.add(wi);
             }
 
             // Selection highlight
             if (selectedTableId === table.id) {
                 const outline = new THREE.Mesh(
-                    new THREE.BoxGeometry(size + 0.35, 0.12, size + 0.35),
-                    new THREE.MeshBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.35 })
+                    new THREE.BoxGeometry(size + 0.4, 0.14, size + 0.4),
+                    new THREE.MeshBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.3 })
                 );
                 outline.position.y = 0.75; group.add(outline);
-                const sel = new THREE.PointLight(0x6366f1, 1.2, 4);
-                sel.position.y = 2.5; group.add(sel);
+                const selGlow = new THREE.PointLight(0x6366f1, 1.5, 5);
+                selGlow.position.y = 2.5; group.add(selGlow);
+                const ring = new THREE.Mesh(
+                    new THREE.RingGeometry(size * 0.6, size * 0.7, 32),
+                    new THREE.MeshBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
+                );
+                ring.rotation.x = -Math.PI / 2; ring.position.y = 0.02; group.add(ring);
             }
 
             group.position.set(table.x, 0, table.z);
@@ -1008,7 +1170,6 @@
         const venues = TF.loadVenues();
         const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
         const list = document.getElementById('venueList');
-
         list.innerHTML = venues
             .filter(v => v.name.toLowerCase().includes(search) || v.cuisine.toLowerCase().includes(search))
             .map(v => {
@@ -1019,16 +1180,16 @@
                     <div class="venue-meta">
                         <span>${v.cuisine}</span>
                         <span>${v.priceRange}</span>
-                        <span>⭐ ${v.rating}</span>
+                        <span>${v.rating}</span>
                     </div>
                     <div class="venue-availability">
                         <span class="avail-badge ${s.empty > 2 ? 'ok' : 'low'}">
-                            ${s.empty > 0 ? `✅ ${s.empty} available` : '❌ Full'}
+                            ${s.empty > 0 ? s.empty + ' available' : 'Full'}
                         </span>
-                        <span style="font-size:12px;color:var(--text-dim)">${s.rate}% full</span>
+                        <span style="font-size:12px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-weight:700;">${s.rate}% full</span>
                     </div>
                     <div class="venue-features">
-                        ${v.features.slice(0, 3).map(f => `<span>${f}</span>`).join('')}
+                        ${v.features.slice(0, 3).map(f => '<span>' + f + '</span>').join('')}
                     </div>
                 </div>`;
             }).join('');
@@ -1052,8 +1213,8 @@
                 <div class="t-info">
                     <div class="t-label">Table #${t.id}</div>
                     <div class="t-detail">
-                        👥 ${t.seats} seats &middot; ${t.location === 'indoor' ? '🏠' : '🌳'} ${t.location}
-                        ${t.smoking ? ' &middot; 🚬' : ''}${t.hasWindow ? ' &middot; 🪟' : ''}
+                        ${t.seats} seats &middot; ${t.location === 'indoor' ? 'Indoor' : 'Outdoor'}
+                        ${t.smoking ? ' &middot; Smoking' : ''}${t.hasWindow ? ' &middot; Window' : ''}
                     </div>
                 </div>
                 <div class="t-status ${t.status}">${t.status === 'empty' ? '✅ Open' : t.status === 'reserved' ? '⏳ Held' : '🔴 Taken'}</div>
@@ -1076,16 +1237,21 @@
 
     function renderOverlay() {
         const el = document.getElementById('tableOverlay');
-        if (selectedTableId === null) { el.style.display = 'none'; return; }
-
+        if (selectedTableId === null) {
+            if (el.style.display !== 'none') {
+                gsap.to(el, { opacity: 0, y: -10, duration: 0.2, ease: 'power2.in', onComplete: () => { el.style.display = 'none'; } });
+            }
+            return;
+        }
         const venues = TF.loadVenues();
         const venue = venues.find(v => v.id === activeVenueId);
         const table = venue?.tables.find(t => t.id === selectedTableId);
         if (!table) { el.style.display = 'none'; return; }
 
         el.style.display = 'block';
+        el.style.opacity = '0';
         el.innerHTML = `
-            <button class="close-btn" onclick="selectTable(null)">✕</button>
+            <button class="close-btn" onclick="selectTable(null)">&times;</button>
             <h3>Table #${table.id}</h3>
             <div class="detail-row"><span class="label">Status</span>
                 <span class="t-status ${table.status}" style="padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;">
@@ -1099,6 +1265,7 @@
             <div class="detail-row"><span class="label">Server</span><span>👤 ${table.serverName}</span></div>
             ${table.notes ? `<div class="detail-row" style="flex-direction:column;gap:4px;"><span class="label">Notes</span><span style="font-size:13px;font-style:italic;color:var(--text-dim);">📝 ${table.notes}</span></div>` : ''}
         `;
+        gsap.fromTo(el, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power3.out' });
     }
 
     // ==================== ACTIONS ====================
@@ -1110,7 +1277,14 @@
         document.getElementById('venueDetailPanel').style.display = 'none';
         const venues = TF.loadVenues();
         const venue = venues.find(v => v.id === id);
-        document.getElementById('mainTitle').textContent = venue?.name || '';
+        const titleEl = document.getElementById('mainTitle');
+        gsap.to(titleEl, {
+            opacity: 0, y: -8, duration: 0.15,
+            onComplete: () => {
+                titleEl.textContent = venue?.name || '';
+                gsap.fromTo(titleEl, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.25, ease: 'power3.out' });
+            }
+        });
         fullRender();
     }
 
@@ -1130,6 +1304,7 @@
         btn.classList.add('active');
         btn.setAttribute('aria-selected', 'true');
         renderTableList();
+        gsap.from('.table-item', { opacity: 0, x: -10, duration: 0.25, stagger: 0.03, ease: 'power3.out' });
     }
 
     let currentView = '3d';
@@ -1251,20 +1426,14 @@
 
     // ==================== CROSS-TAB SYNC ====================
     TF.channel.onmessage = (e) => {
-        if (e.data.type === 'venues-updated') {
-            fullRender();
-        }
+        if (e.data.type === 'venues-updated') fullRender();
     };
 
-    // Poll localStorage as fallback (some browsers don't support BroadcastChannel well)
     let lastHash = '';
     setInterval(() => {
         const stored = localStorage.getItem(TF.STORAGE_KEY) || '';
         const hash = stored.length.toString();
-        if (hash !== lastHash) {
-            lastHash = hash;
-            fullRender();
-        }
+        if (hash !== lastHash) { lastHash = hash; fullRender(); }
     }, 1500);
 
     // ==================== KEYBOARD NAVIGATION ====================

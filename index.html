@@ -485,6 +485,31 @@
         .list-view .lv-badge.occupied { background: var(--red-dim); color: var(--red); }
         .list-view .lv-badge.reserved { background: rgba(234,179,8,.12); color: var(--yellow); }
 
+        /* ---- 3D TOOLTIP ---- */
+        .table-tooltip {
+            position: absolute;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            pointer-events: none;
+            z-index: 12;
+            font-size: 13px;
+            box-shadow: 0 6px 20px rgba(0,0,0,.3);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity .15s ease;
+        }
+        .table-tooltip.visible { opacity: 1; }
+        .table-tooltip .tt-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800; font-size: 15px;
+            margin-bottom: 4px;
+        }
+        .table-tooltip .tt-meta {
+            color: var(--text-dim); font-size: 12px;
+        }
+
         /* ---- LOADING SCREEN ---- */
         .loading-screen {
             position: fixed; inset: 0; z-index: 1000;
@@ -606,6 +631,7 @@
 
             <div class="canvas-wrap" id="canvasWrap" aria-label="Interactive 3D floor plan — drag to rotate, scroll to zoom, click tables for details">
                 <!-- 3D scene renders here -->
+                <div class="table-tooltip" id="tableTooltip"></div>
 
                 <!-- Stats overlay -->
                 <div class="stats-overlay" id="statsOverlay" aria-live="polite" aria-label="Venue statistics"></div>
@@ -755,6 +781,33 @@
             } else {
                 selectTable(null);
             }
+        });
+
+        // Hover tooltip
+        const tooltip = document.getElementById('tableTooltip');
+        const hoverMouse = new THREE.Vector2();
+        renderer.domElement.addEventListener('mousemove', e => {
+            if (isDragging) { tooltip.classList.remove('visible'); return; }
+            const rect = renderer.domElement.getBoundingClientRect();
+            hoverMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            hoverMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(hoverMouse, camera);
+            const hits = raycaster.intersectObjects(tableMeshes);
+            if (hits.length > 0 && hits[0].object.userData.table) {
+                const t = hits[0].object.userData.table;
+                const statusLabel = t.status === 'empty' ? '✅ Available' : t.status === 'reserved' ? '⏳ Reserved' : '🔴 Occupied';
+                tooltip.innerHTML = `<div class="tt-num" style="color:${t.status === 'empty' ? 'var(--green)' : t.status === 'reserved' ? 'var(--yellow)' : 'var(--red)'}">Table #${t.id}</div><div class="tt-meta">👥 ${t.seats} seats &middot; ${statusLabel}</div>`;
+                tooltip.style.left = (e.clientX - rect.left + 16) + 'px';
+                tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+                tooltip.classList.add('visible');
+                renderer.domElement.style.cursor = 'pointer';
+            } else {
+                tooltip.classList.remove('visible');
+                renderer.domElement.style.cursor = 'grab';
+            }
+        });
+        renderer.domElement.addEventListener('mouseleave', () => {
+            tooltip.classList.remove('visible');
         });
 
         // Resize

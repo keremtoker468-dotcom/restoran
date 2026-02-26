@@ -484,7 +484,8 @@
             </div>
 
             <div class="search-box">
-                <input type="text" placeholder="Search venues..." id="searchInput" oninput="renderVenueList()" aria-label="Search venues by name or cuisine">
+                <input type="text" placeholder="Search venues or tables (e.g. '4 seats', 'window', 'outdoor')..." id="searchInput" oninput="handleSearch()" aria-label="Search venues by name, cuisine, or table attributes like seats, window, smoking, outdoor">
+                <button id="clearSearch" style="display:none;position:absolute;right:28px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;padding:4px 8px;" onclick="clearSearch()" aria-label="Clear search">✕</button>
             </div>
 
             <div class="venue-list" id="venueList" role="list" aria-label="Available venues"></div>
@@ -818,6 +819,45 @@
 
     // ==================== UI RENDERING ====================
 
+    let tableSearchQuery = '';
+
+    function handleSearch() {
+        const val = (document.getElementById('searchInput')?.value || '');
+        document.getElementById('clearSearch').style.display = val ? 'block' : 'none';
+        tableSearchQuery = val.toLowerCase();
+        renderVenueList();
+        renderTableList();
+        if (currentView === 'list') renderListView();
+    }
+
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('clearSearch').style.display = 'none';
+        tableSearchQuery = '';
+        renderVenueList();
+        renderTableList();
+        if (currentView === 'list') renderListView();
+    }
+
+    function matchesTableSearch(table, query) {
+        if (!query) return true;
+        const terms = query.split(/\s+/);
+        return terms.every(term => {
+            if (/^\d+$/.test(term)) {
+                return table.seats >= parseInt(term);
+            }
+            if (term === 'window' || term === 'windows') return table.hasWindow;
+            if (term === 'smoking' || term === 'smoke') return table.smoking;
+            if (term === 'nonsmoking' || term === 'no-smoking') return !table.smoking;
+            if (term === 'indoor' || term === 'inside') return table.location === 'indoor';
+            if (term === 'outdoor' || term === 'outside' || term === 'patio') return table.location === 'outdoor';
+            if (term === 'empty' || term === 'available' || term === 'open' || term === 'free') return table.status === 'empty';
+            if (term === 'seats' || term === 'seat') return true; // consumed by number
+            if (table.serverName.toLowerCase().includes(term)) return true;
+            return false;
+        });
+    }
+
     function renderVenueList() {
         const venues = TF.loadVenues();
         const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
@@ -857,6 +897,7 @@
         if (currentFilter === 'indoor') tables = tables.filter(t => t.location === 'indoor');
         else if (currentFilter === 'outdoor') tables = tables.filter(t => t.location === 'outdoor');
         else if (currentFilter === 'empty') tables = tables.filter(t => t.status === 'empty');
+        if (tableSearchQuery) tables = tables.filter(t => matchesTableSearch(t, tableSearchQuery));
 
         document.getElementById('tableList').innerHTML = tables.map(t => {
             const sel = selectedTableId === t.id;
@@ -963,6 +1004,7 @@
         if (currentFilter === 'indoor') tables = tables.filter(t => t.location === 'indoor');
         else if (currentFilter === 'outdoor') tables = tables.filter(t => t.location === 'outdoor');
         else if (currentFilter === 'empty') tables = tables.filter(t => t.status === 'empty');
+        if (tableSearchQuery) tables = tables.filter(t => matchesTableSearch(t, tableSearchQuery));
 
         const indoor = tables.filter(t => t.location === 'indoor');
         const outdoor = tables.filter(t => t.location === 'outdoor');

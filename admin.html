@@ -4,63 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>TableFinder Pro — Staff Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0c0e13;
-            --surface: #15171e;
-            --surface-2: #1c1f28;
+            --bg: #0a0b0f;
+            --surface: #12141a;
+            --surface-2: #1a1c24;
+            --surface-3: #22252e;
             --border: #2a2d38;
-            --text: #e4e4e7;
-            --text-dim: #71717a;
+            --border-light: #363a48;
+            --text: #f0f0f3;
+            --text-dim: #8b8d98;
+            --text-muted: #55576a;
             --accent: #6366f1;
-            --accent-glow: rgba(99,102,241,.25);
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99,102,241,.2);
             --green: #22c55e;
-            --green-dim: rgba(34,197,94,.12);
+            --green-dim: rgba(34,197,94,.1);
+            --green-border: rgba(34,197,94,.25);
             --red: #ef4444;
-            --red-dim: rgba(239,68,68,.12);
+            --red-dim: rgba(239,68,68,.08);
+            --red-border: rgba(239,68,68,.25);
             --yellow: #eab308;
-            --radius: 14px;
+            --radius: 16px;
+            --radius-sm: 10px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'DM Sans', -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* ---- TOP BAR ---- */
+        /* TOP BAR */
         .topbar {
             position: sticky; top: 0; z-index: 100;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 16px 24px;
-            background: rgba(12,14,19,.85);
+            padding: 18px 28px;
+            background: rgba(10,11,15,.9);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
         }
         .topbar-brand {
-            display: flex; align-items: center; gap: 12px;
+            display: flex; align-items: center; gap: 14px;
         }
         .topbar-brand .icon {
-            width: 38px; height: 38px;
+            width: 42px; height: 42px;
             background: linear-gradient(135deg, var(--accent), #a855f7);
-            border-radius: 10px;
+            border-radius: 12px;
             display: grid; place-items: center;
-            font-size: 18px;
+            font-size: 20px;
+            box-shadow: 0 4px 20px rgba(99,102,241,.3);
         }
         .topbar-brand h1 {
-            font-size: 18px; font-weight: 800;
-            letter-spacing: -.3px;
+            font-family: 'Playfair Display', serif;
+            font-size: 20px; font-weight: 800;
+            letter-spacing: -.5px;
         }
-        .topbar-brand h1 span { color: var(--accent); }
+        .topbar-brand h1 span { color: var(--accent-light); }
         .topbar-brand small {
             display: block; font-size: 11px;
             color: var(--text-dim); font-weight: 500;
-            text-transform: uppercase; letter-spacing: 1px;
+            text-transform: uppercase; letter-spacing: 1.5px;
+        }
+
+        .topbar-center {
+            display: flex; align-items: center; gap: 14px;
         }
         .live-dot {
             width: 8px; height: 8px;
@@ -69,38 +83,46 @@
             box-shadow: 0 0 8px var(--green);
             animation: blink 2s ease infinite;
         }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+        .clock-display {
+            font-size: 13px; color: var(--text-dim); font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
 
         .topbar-actions { display: flex; gap: 10px; }
-        .topbar-actions button {
-            padding: 8px 16px;
-            border-radius: 10px;
+        .topbar-actions button, .topbar-actions a {
+            padding: 9px 18px;
+            border-radius: var(--radius-sm);
             border: 1px solid var(--border);
             background: var(--surface);
             color: var(--text-dim);
             font-family: inherit;
             font-size: 13px; font-weight: 600;
             cursor: pointer;
-            transition: .15s;
+            transition: all .2s;
+            text-decoration: none;
+            display: inline-flex; align-items: center; gap: 6px;
         }
-        .topbar-actions button:hover {
+        .topbar-actions button:hover, .topbar-actions a:hover {
             border-color: var(--accent);
             color: var(--text);
+            background: var(--accent-glow);
         }
         .topbar-actions button.danger:hover {
             border-color: var(--red);
             color: var(--red);
+            background: var(--red-dim);
         }
 
-        /* ---- VENUE TABS ---- */
+        /* VENUE TABS */
         .venue-tabs {
             display: flex; gap: 8px;
-            padding: 16px 24px 0;
+            padding: 20px 28px 0;
             overflow-x: auto;
         }
         .venue-tab {
-            padding: 10px 20px;
-            border-radius: 10px 10px 0 0;
+            padding: 12px 22px;
+            border-radius: 12px 12px 0 0;
             border: 1px solid var(--border);
             border-bottom: none;
             background: var(--surface);
@@ -109,19 +131,17 @@
             font-size: 14px; font-weight: 600;
             cursor: pointer;
             white-space: nowrap;
-            transition: .15s;
+            transition: all .2s;
         }
         .venue-tab.active {
             background: var(--surface-2);
             color: var(--text);
             border-color: var(--accent);
-            border-bottom: 2px solid var(--surface-2);
-            position: relative;
         }
         .venue-tab .tab-count {
             display: inline-block;
-            margin-left: 8px;
-            padding: 2px 8px;
+            margin-left: 10px;
+            padding: 3px 10px;
             border-radius: 8px;
             font-size: 11px;
             font-weight: 700;
@@ -130,28 +150,33 @@
         .venue-tab .tab-count.ok { background: var(--green-dim); color: var(--green); }
         .venue-tab .tab-count.full { background: var(--red-dim); color: var(--red); }
 
-        /* ---- STATS BAR ---- */
+        /* STATS BAR */
         .stats-bar {
-            display: flex; gap: 12px;
-            padding: 20px 24px;
+            display: flex; gap: 14px;
+            padding: 24px 28px;
             flex-wrap: wrap;
         }
         .stat-card {
-            flex: 1; min-width: 140px;
+            flex: 1; min-width: 150px;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 16px 20px;
+            padding: 20px 22px;
+            transition: all .2s;
+        }
+        .stat-card:hover {
+            border-color: var(--border-light);
+            transform: translateY(-1px);
         }
         .stat-card .label {
             font-size: 11px; font-weight: 600;
-            color: var(--text-dim);
+            color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: .8px;
-            margin-bottom: 6px;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
         }
         .stat-card .value {
-            font-size: 28px; font-weight: 800;
+            font-size: 32px; font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
             letter-spacing: -1px;
         }
@@ -160,7 +185,7 @@
         .stat-card .value.yellow { color: var(--yellow); }
 
         .occupancy-bar {
-            margin-top: 10px; height: 6px;
+            margin-top: 12px; height: 6px;
             background: var(--surface-2);
             border-radius: 3px; overflow: hidden;
         }
@@ -170,51 +195,51 @@
             transition: width .4s ease;
         }
 
-        /* ---- BULK ACTIONS ---- */
+        /* BULK ACTIONS */
         .bulk-actions {
             display: flex; gap: 10px;
-            padding: 0 24px 16px;
+            padding: 0 28px 20px;
             flex-wrap: wrap;
         }
         .bulk-btn {
-            padding: 10px 20px;
-            border-radius: 10px;
+            padding: 11px 22px;
+            border-radius: var(--radius-sm);
             border: 1px solid var(--border);
             background: var(--surface);
             color: var(--text);
             font-family: inherit;
             font-size: 13px; font-weight: 600;
             cursor: pointer;
-            transition: .15s;
+            transition: all .2s;
             display: flex; align-items: center; gap: 8px;
         }
-        .bulk-btn:hover { border-color: var(--accent); }
+        .bulk-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
         .bulk-btn.green-action:hover { border-color: var(--green); background: var(--green-dim); }
         .bulk-btn.red-action:hover { border-color: var(--red); background: var(--red-dim); }
 
-        /* ---- TABLE GRID ---- */
+        /* TABLE GRID */
         .section-label {
-            padding: 0 24px 12px;
+            padding: 0 28px 14px;
             font-size: 12px; font-weight: 700;
-            color: var(--text-dim);
+            color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
 
         .table-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-            gap: 12px;
-            padding: 0 24px 32px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 14px;
+            padding: 0 28px 36px;
         }
 
         .table-card {
             background: var(--surface);
             border: 2px solid var(--border);
             border-radius: var(--radius);
-            padding: 20px 16px;
+            padding: 22px 18px;
             cursor: pointer;
-            transition: .2s;
+            transition: all .2s cubic-bezier(.4,0,.2,1);
             text-align: center;
             user-select: none;
             position: relative;
@@ -226,23 +251,22 @@
             height: 4px;
             transition: .2s;
         }
-        .table-card.empty { border-color: rgba(34,197,94,.3); }
+        .table-card.empty { border-color: var(--green-border); }
         .table-card.empty::before { background: var(--green); }
-        .table-card.occupied { border-color: rgba(239,68,68,.3); }
+        .table-card.occupied { border-color: var(--red-border); }
         .table-card.occupied::before { background: var(--red); }
 
-        .table-card:active {
-            transform: scale(.96);
-        }
+        .table-card:active { transform: scale(.96); }
         .table-card:hover {
             border-color: var(--accent);
-            box-shadow: 0 0 20px var(--accent-glow);
+            box-shadow: 0 0 24px var(--accent-glow);
+            transform: translateY(-2px);
         }
 
         .table-card .table-number {
-            font-size: 24px; font-weight: 800;
+            font-size: 26px; font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
         .table-card.empty .table-number { color: var(--green); }
         .table-card.occupied .table-number { color: var(--red); }
@@ -251,76 +275,65 @@
             font-size: 11px; font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 10px;
-            padding: 4px 10px;
+            margin-bottom: 12px;
+            padding: 5px 12px;
             border-radius: 6px;
             display: inline-block;
         }
-        .table-card.empty .table-status {
-            background: var(--green-dim); color: var(--green);
-        }
-        .table-card.occupied .table-status {
-            background: var(--red-dim); color: var(--red);
-        }
+        .table-card.empty .table-status { background: var(--green-dim); color: var(--green); }
+        .table-card.occupied .table-status { background: var(--red-dim); color: var(--red); }
 
         .table-card .table-meta {
             font-size: 12px;
             color: var(--text-dim);
-            line-height: 1.6;
-        }
-        .table-card .table-meta span {
-            display: inline-block;
-            margin: 0 3px;
+            line-height: 1.8;
         }
 
         .table-card .tap-hint {
-            margin-top: 12px;
-            font-size: 11px;
-            color: var(--text-dim);
-            opacity: .5;
+            margin-top: 14px;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* ---- TOAST ---- */
+        /* TOAST */
         .toast-container {
-            position: fixed; bottom: 24px; right: 24px;
-            z-index: 200; display: flex; flex-direction: column; gap: 8px;
+            position: fixed; bottom: 28px; right: 28px;
+            z-index: 200; display: flex; flex-direction: column; gap: 10px;
         }
         .toast {
-            padding: 12px 20px;
+            padding: 14px 22px;
             background: var(--surface-2);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: var(--radius-sm);
             font-size: 13px; font-weight: 600;
             color: var(--text);
-            animation: slideUp .3s ease;
             display: flex; align-items: center; gap: 10px;
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            box-shadow: 0 8px 32px rgba(0,0,0,.4);
         }
 
-        /* ---- FOOTER ---- */
+        /* FOOTER */
         .admin-footer {
-            padding: 20px 24px;
+            padding: 24px 28px;
             border-top: 1px solid var(--border);
             font-size: 12px;
-            color: var(--text-dim);
+            color: var(--text-muted);
             text-align: center;
         }
         .admin-footer a {
-            color: var(--accent);
+            color: var(--accent-light);
             text-decoration: none;
         }
 
-        /* ---- RESPONSIVE ---- */
         @media (max-width: 600px) {
-            .topbar { padding: 12px 16px; }
-            .stats-bar { padding: 12px 16px; }
-            .table-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); padding: 0 16px 24px; gap: 10px; }
-            .bulk-actions { padding: 0 16px 12px; }
-            .section-label { padding: 0 16px 10px; }
-            .venue-tabs { padding: 12px 16px 0; }
+            .topbar { padding: 14px 18px; flex-wrap: wrap; gap: 10px; }
+            .topbar-center { order: 3; width: 100%; justify-content: center; }
+            .stats-bar { padding: 14px 18px; }
+            .table-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); padding: 0 18px 28px; gap: 10px; }
+            .bulk-actions { padding: 0 18px 14px; }
+            .section-label { padding: 0 18px 12px; }
+            .venue-tabs { padding: 14px 18px 0; }
         }
     </style>
 </head>
@@ -329,19 +342,19 @@
     <!-- TOP BAR -->
     <div class="topbar">
         <div class="topbar-brand">
-            <div class="icon">🍽️</div>
+            <div class="icon">&#x1F37D;&#xFE0F;</div>
             <div>
                 <h1>Table<span>Finder</span> Pro</h1>
                 <small>Staff Control Panel</small>
             </div>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;">
+        <div class="topbar-center">
             <div class="live-dot"></div>
-            <span style="font-size:13px;color:var(--text-dim);font-weight:600;" id="clock"></span>
+            <span class="clock-display" id="clock"></span>
         </div>
         <div class="topbar-actions">
-            <button onclick="window.open('index.html','_blank')">👁️ Customer View</button>
-            <button class="danger" onclick="resetAll()">↺ Reset All</button>
+            <a href="index.html" target="_blank">Customer View</a>
+            <button class="danger" onclick="resetAll()">Reset All</button>
         </div>
     </div>
 
@@ -353,25 +366,17 @@
 
     <!-- BULK ACTIONS -->
     <div class="bulk-actions">
-        <button class="bulk-btn green-action" onclick="setAll('empty')">
-            ✅ Mark All Empty
-        </button>
-        <button class="bulk-btn red-action" onclick="setAll('occupied')">
-            ❌ Mark All Occupied
-        </button>
-        <button class="bulk-btn" onclick="toggleIndoor()">
-            🏠 Toggle Indoor
-        </button>
-        <button class="bulk-btn" onclick="toggleOutdoor()">
-            🌳 Toggle Outdoor
-        </button>
+        <button class="bulk-btn green-action" onclick="setAll('empty')">Mark All Empty</button>
+        <button class="bulk-btn red-action" onclick="setAll('occupied')">Mark All Occupied</button>
+        <button class="bulk-btn" onclick="toggleIndoor()">Toggle Indoor</button>
+        <button class="bulk-btn" onclick="toggleOutdoor()">Toggle Outdoor</button>
     </div>
 
     <!-- TABLE GRIDS -->
-    <div class="section-label" id="indoorLabel">🏠 INDOOR TABLES</div>
+    <div class="section-label" id="indoorLabel">Indoor Tables</div>
     <div class="table-grid" id="indoorGrid"></div>
 
-    <div class="section-label" id="outdoorLabel">🌳 OUTDOOR TABLES</div>
+    <div class="section-label" id="outdoorLabel">Outdoor Tables</div>
     <div class="table-grid" id="outdoorGrid"></div>
 
     <!-- TOAST -->
@@ -401,14 +406,12 @@
             if (!venue) return;
 
             // Tabs
-            const tabsEl = document.getElementById('venueTabs');
-            tabsEl.innerHTML = venues.map(v => {
+            document.getElementById('venueTabs').innerHTML = venues.map(v => {
                 const s = TF.getStats(v);
                 const isActive = v.id === activeVenueId;
-                const countClass = s.empty > 0 ? 'ok' : 'full';
                 return `<button class="venue-tab ${isActive ? 'active' : ''}" onclick="switchVenue(${v.id})">
                     ${v.name}
-                    <span class="tab-count ${countClass}">${s.empty}/${s.total}</span>
+                    <span class="tab-count ${s.empty > 0 ? 'ok' : 'full'}">${s.empty}/${s.total}</span>
                 </button>`;
             }).join('');
 
@@ -441,23 +444,22 @@
             const indoor = venue.tables.filter(t => t.location === 'indoor');
             const outdoor = venue.tables.filter(t => t.location === 'outdoor');
 
-            document.getElementById('indoorLabel').textContent = `🏠 INDOOR TABLES (${indoor.length})`;
-            document.getElementById('outdoorLabel').textContent = `🌳 OUTDOOR TABLES (${outdoor.length})`;
+            document.getElementById('indoorLabel').textContent = 'INDOOR TABLES (' + indoor.length + ')';
+            document.getElementById('outdoorLabel').textContent = 'OUTDOOR TABLES (' + outdoor.length + ')';
 
             document.getElementById('indoorGrid').innerHTML = indoor.map(t => tableCard(venue.id, t)).join('');
             document.getElementById('outdoorGrid').innerHTML = outdoor.map(t => tableCard(venue.id, t)).join('');
         }
 
         function tableCard(venueId, t) {
-            const icon = t.status === 'empty' ? '✅' : '🔴';
             return `<div class="table-card ${t.status}" onclick="toggle(${venueId},${t.id})">
                 <div class="table-number">#${t.id}</div>
-                <div class="table-status">${icon} ${t.status}</div>
+                <div class="table-status">${t.status}</div>
                 <div class="table-meta">
-                    <span>👥 ${t.seats}</span>
-                    ${t.smoking ? '<span>🚬</span>' : ''}
-                    ${t.hasWindow ? '<span>🪟</span>' : ''}
-                    <span>👤 ${t.serverName}</span>
+                    ${t.seats} seats
+                    ${t.smoking ? ' &middot; Smoking' : ''}
+                    ${t.hasWindow ? ' &middot; Window' : ''}
+                    <br>${t.serverName}
                 </div>
                 <div class="tap-hint">tap to toggle</div>
             </div>`;
@@ -468,19 +470,31 @@
             TF.toggleTable(venueId, tableId);
             const venues = TF.loadVenues();
             const table = venues.find(v => v.id === venueId)?.tables.find(t => t.id === tableId);
-            showToast(`Table #${tableId} → ${table?.status === 'empty' ? '✅ Empty' : '🔴 Occupied'}`);
+            showToast('Table #' + tableId + ' → ' + (table?.status === 'empty' ? 'Empty' : 'Occupied'));
             render();
+
+            // GSAP pulse on the toggled card
+            const cards = document.querySelectorAll('.table-card');
+            cards.forEach(c => {
+                if (c.querySelector('.table-number')?.textContent === '#' + tableId) {
+                    gsap.fromTo(c, { scale: 0.95 }, { scale: 1, duration: 0.3, ease: 'back.out(2)' });
+                }
+            });
         }
 
         function switchVenue(id) {
             activeVenueId = id;
             render();
+            // Animate cards in
+            gsap.from('.table-card', { y: 15, opacity: 0, duration: 0.3, stagger: 0.03, ease: 'power3.out' });
+            gsap.from('.stat-card', { y: -10, opacity: 0, duration: 0.3, stagger: 0.05, ease: 'power3.out' });
         }
 
         function setAll(status) {
             TF.setAllTables(activeVenueId, status);
-            showToast(`All tables marked ${status === 'empty' ? '✅ empty' : '🔴 occupied'}`);
+            showToast('All tables marked ' + (status === 'empty' ? 'empty' : 'occupied'));
             render();
+            gsap.from('.table-card', { scale: 0.9, opacity: 0, duration: 0.3, stagger: 0.02, ease: 'back.out(1.5)' });
         }
 
         function toggleIndoor() {
@@ -513,24 +527,36 @@
             }
         }
 
-        // ---- TOAST ----
+        // ---- TOAST (GSAP animated) ----
         function showToast(msg) {
             const el = document.createElement('div');
             el.className = 'toast';
-            el.innerHTML = `<span>${msg}</span>`;
+            el.innerHTML = '<span>' + msg + '</span>';
             document.getElementById('toasts').appendChild(el);
-            setTimeout(() => el.remove(), 2500);
+            gsap.fromTo(el,
+                { opacity: 0, y: 20, scale: 0.95 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.5)' }
+            );
+            setTimeout(() => {
+                gsap.to(el, { opacity: 0, y: -10, duration: 0.25, onComplete: () => el.remove() });
+            }, 2200);
         }
 
-        // ---- LISTEN FOR CROSS-TAB SYNC ----
+        // ---- CROSS-TAB SYNC ----
         TF.channel.onmessage = () => render();
 
         // ---- INIT ----
-        // Seed defaults if first load
         if (!localStorage.getItem(TF.STORAGE_KEY)) {
             TF.saveVenues(JSON.parse(JSON.stringify(TF.DEFAULT_VENUES)));
         }
         render();
+
+        // Entrance animation
+        gsap.from('.topbar', { y: -30, opacity: 0, duration: 0.4, ease: 'power3.out' });
+        gsap.from('.venue-tab', { y: 15, opacity: 0, duration: 0.3, stagger: 0.05, ease: 'power3.out', delay: 0.2 });
+        gsap.from('.stat-card', { y: 20, opacity: 0, duration: 0.35, stagger: 0.06, ease: 'power3.out', delay: 0.3 });
+        gsap.from('.bulk-btn', { x: -15, opacity: 0, duration: 0.3, stagger: 0.04, ease: 'power3.out', delay: 0.4 });
+        gsap.from('.table-card', { y: 20, opacity: 0, duration: 0.3, stagger: 0.025, ease: 'power3.out', delay: 0.5 });
     </script>
 </body>
 </html>

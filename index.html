@@ -1670,16 +1670,21 @@
     if (!localStorage.getItem(TF.STORAGE_KEY)) {
         TF.saveVenues(JSON.parse(JSON.stringify(TF.DEFAULT_VENUES)));
     }
-    init3D();
+    try {
+        if (typeof THREE === 'undefined') throw new Error('Three.js not loaded');
+        init3D();
+    } catch (e) {
+        console.warn('3D init failed:', e.message);
+    }
     fullRender();
 
     // Fade out loading screen, fade in app
     requestAnimationFrame(() => {
         const loader = document.getElementById('loadingScreen');
         const app = document.getElementById('app');
-        loader.classList.add('fade-out');
-        app.classList.add('loaded');
-        setTimeout(() => loader.remove(), 500);
+        if (loader) loader.classList.add('fade-out');
+        if (app) app.classList.add('loaded');
+        setTimeout(() => { if (loader) loader.remove(); }, 500);
     });
     </script>
 </body>

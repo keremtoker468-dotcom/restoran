@@ -153,6 +153,17 @@ TF.setAllTables = function (venueId, status) {
     return venues;
 };
 
+TF.setTableNote = function (venueId, tableId, note) {
+    const venues = TF.loadVenues();
+    const venue = venues.find(v => v.id === venueId);
+    if (!venue) return venues;
+    const table = venue.tables.find(t => t.id === tableId);
+    if (!table) return venues;
+    table.notes = note;
+    TF.saveVenues(venues);
+    return venues;
+};
+
 // ---- Utilities ----
 TF.getStats = function (venue) {
     const total = venue.tables.length;

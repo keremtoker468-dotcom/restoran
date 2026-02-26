@@ -1097,6 +1097,7 @@
             <div class="detail-row"><span class="label">Smoking</span><span>${table.smoking ? '🚬 Yes' : '🚭 No'}</span></div>
             ${table.hasWindow ? '<div class="detail-row"><span class="label">Window</span><span>🪟 Yes</span></div>' : ''}
             <div class="detail-row"><span class="label">Server</span><span>👤 ${table.serverName}</span></div>
+            ${table.notes ? `<div class="detail-row" style="flex-direction:column;gap:4px;"><span class="label">Notes</span><span style="font-size:13px;font-style:italic;color:var(--text-dim);">📝 ${table.notes}</span></div>` : ''}
         `;
     }
 

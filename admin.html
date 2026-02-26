@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="TableFinder Pro staff control panel. Manage table availability in real-time.">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta property="og:title" content="TableFinder Pro — Staff Panel">
+    <meta property="og:description" content="Staff control panel for managing restaurant table availability.">
+    <meta property="og:type" content="website">
     <title>TableFinder Pro — Staff Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
@@ -154,6 +160,7 @@
             font-size: 28px; font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
             letter-spacing: -1px;
+            transition: color .3s ease;
         }
         .stat-card .value.green { color: var(--green); }
         .stat-card .value.red { color: var(--red); }
@@ -230,7 +237,12 @@
         .table-card.empty::before { background: var(--green); }
         .table-card.occupied { border-color: rgba(239,68,68,.3); }
         .table-card.occupied::before { background: var(--red); }
+        .table-card.reserved { border-color: rgba(234,179,8,.3); }
+        .table-card.reserved::before { background: var(--yellow); }
 
+        .table-card {
+            transition: all .3s ease;
+        }
         .table-card:active {
             transform: scale(.96);
         }
@@ -246,6 +258,7 @@
         }
         .table-card.empty .table-number { color: var(--green); }
         .table-card.occupied .table-number { color: var(--red); }
+        .table-card.reserved .table-number { color: var(--yellow); }
 
         .table-card .table-status {
             font-size: 11px; font-weight: 700;
@@ -262,6 +275,9 @@
         .table-card.occupied .table-status {
             background: var(--red-dim); color: var(--red);
         }
+        .table-card.reserved .table-status {
+            background: rgba(234,179,8,.12); color: var(--yellow);
+        }
 
         .table-card .table-meta {
             font-size: 12px;
@@ -273,8 +289,64 @@
             margin: 0 3px;
         }
 
+        .table-card .notes-toggle {
+            margin-top: 6px;
+            background: none; border: none;
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            padding: 2px 0;
+            opacity: .7;
+            transition: .15s;
+        }
+        .table-card .notes-toggle:hover { color: var(--accent); opacity: 1; }
+        .table-card .notes-area {
+            margin-top: 6px;
+            width: 100%;
+            padding: 8px 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12px;
+            resize: vertical;
+            min-height: 48px;
+            outline: none;
+            transition: .15s;
+        }
+        .table-card .notes-area:focus { border-color: var(--accent); }
+        .table-card .notes-preview {
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--text-dim);
+            font-style: italic;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .table-card .server-select {
+            margin-top: 8px;
+            width: 100%;
+            padding: 6px 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+            transition: .15s;
+        }
+        .table-card .server-select:focus {
+            border-color: var(--accent);
+        }
+
         .table-card .tap-hint {
-            margin-top: 12px;
+            margin-top: 8px;
             font-size: 11px;
             color: var(--text-dim);
             opacity: .5;
@@ -298,6 +370,14 @@
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes statusPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .table-card.just-toggled {
+            animation: statusPulse .3s ease;
         }
 
         /* ---- FOOTER ---- */
@@ -327,59 +407,71 @@
 <body>
 
     <!-- TOP BAR -->
-    <div class="topbar">
+    <header class="topbar" role="banner">
         <div class="topbar-brand">
-            <div class="icon">🍽️</div>
+            <div class="icon" aria-hidden="true">🍽️</div>
             <div>
                 <h1>Table<span>Finder</span> Pro</h1>
                 <small>Staff Control Panel</small>
             </div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;">
-            <div class="live-dot"></div>
-            <span style="font-size:13px;color:var(--text-dim);font-weight:600;" id="clock"></span>
+            <div class="live-dot" aria-hidden="true"></div>
+            <span style="font-size:13px;color:var(--text-dim);font-weight:600;" id="clock" aria-label="Current time"></span>
         </div>
         <div class="topbar-actions">
-            <button onclick="window.open('index.html','_blank')">👁️ Customer View</button>
-            <button class="danger" onclick="resetAll()">↺ Reset All</button>
+            <button onclick="window.open('index.html','_blank')" aria-label="Open customer view in new tab">👁️ Customer View</button>
+            <button class="danger" onclick="resetAll()" aria-label="Reset all tables to default state">↺ Reset All</button>
         </div>
-    </div>
+    </header>
 
     <!-- VENUE TABS -->
-    <div class="venue-tabs" id="venueTabs"></div>
+    <div class="venue-tabs" id="venueTabs" role="tablist" aria-label="Select venue"></div>
 
     <!-- STATS -->
-    <div class="stats-bar" id="statsBar"></div>
+    <div class="stats-bar" id="statsBar" aria-live="polite" aria-label="Venue statistics"></div>
 
     <!-- BULK ACTIONS -->
-    <div class="bulk-actions">
-        <button class="bulk-btn green-action" onclick="setAll('empty')">
+    <div class="bulk-actions" role="toolbar" aria-label="Bulk table actions">
+        <button class="bulk-btn green-action" onclick="setAll('empty')" aria-label="Mark all tables as empty">
             ✅ Mark All Empty
         </button>
-        <button class="bulk-btn red-action" onclick="setAll('occupied')">
+        <button class="bulk-btn red-action" onclick="setAll('occupied')" aria-label="Mark all tables as occupied">
             ❌ Mark All Occupied
         </button>
-        <button class="bulk-btn" onclick="toggleIndoor()">
+        <button class="bulk-btn" onclick="toggleIndoor()" aria-label="Toggle all indoor table statuses">
             🏠 Toggle Indoor
         </button>
-        <button class="bulk-btn" onclick="toggleOutdoor()">
+        <button class="bulk-btn" onclick="toggleOutdoor()" aria-label="Toggle all outdoor table statuses">
             🌳 Toggle Outdoor
         </button>
     </div>
 
     <!-- TABLE GRIDS -->
     <div class="section-label" id="indoorLabel">🏠 INDOOR TABLES</div>
-    <div class="table-grid" id="indoorGrid"></div>
+    <div class="table-grid" id="indoorGrid" role="grid" aria-label="Indoor tables"></div>
 
     <div class="section-label" id="outdoorLabel">🌳 OUTDOOR TABLES</div>
-    <div class="table-grid" id="outdoorGrid"></div>
+    <div class="table-grid" id="outdoorGrid" role="grid" aria-label="Outdoor tables"></div>
+
+    <!-- NOTES MODAL -->
+    <div id="notesModal" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:90%;max-width:400px;box-shadow:0 10px 40px rgba(0,0,0,.5);">
+            <h3 id="notesModalTitle" style="font-size:18px;font-weight:800;margin-bottom:12px;"></h3>
+            <textarea id="notesTextarea" style="width:100%;min-height:80px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;resize:vertical;outline:none;" placeholder="Add a note about this table..."></textarea>
+            <div style="display:flex;gap:10px;margin-top:14px;justify-content:flex-end;">
+                <button onclick="closeNotes()" style="padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-dim);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+                <button onclick="saveNotes()" style="padding:8px 18px;border-radius:8px;border:none;background:var(--accent);color:white;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">Save</button>
+            </div>
+        </div>
+    </div>
 
     <!-- TOAST -->
-    <div class="toast-container" id="toasts"></div>
+    <div class="toast-container" id="toasts" aria-live="polite" role="status"></div>
 
     <!-- FOOTER -->
     <div class="admin-footer">
-        TableFinder Pro v2.0 &middot; Tap any table to toggle status &middot; Changes sync live to <a href="index.html">customer view</a>
+        TableFinder Pro v2.0 &middot; Tap any table to cycle: empty → occupied → reserved &middot; Changes sync live to <a href="index.html">customer view</a>
     </div>
 
     <script src="js/data.js"></script>
@@ -425,12 +517,16 @@
                     <div class="value red">${stats.occupied}</div>
                 </div>
                 <div class="stat-card">
+                    <div class="label">Reserved</div>
+                    <div class="value yellow">${stats.reserved}</div>
+                </div>
+                <div class="stat-card">
                     <div class="label">Total</div>
                     <div class="value">${stats.total}</div>
                 </div>
                 <div class="stat-card">
                     <div class="label">Occupancy</div>
-                    <div class="value yellow">${stats.rate}%</div>
+                    <div class="value" style="color:${barColor}">${stats.rate}%</div>
                     <div class="occupancy-bar">
                         <div class="fill" style="width:${stats.rate}%;background:${barColor}"></div>
                     </div>
@@ -448,28 +544,62 @@
             document.getElementById('outdoorGrid').innerHTML = outdoor.map(t => tableCard(venue.id, t)).join('');
         }
 
+        function getVenueServers(venueId) {
+            const venues = TF.loadVenues();
+            const venue = venues.find(v => v.id === venueId);
+            if (!venue) return [];
+            return [...new Set(venue.tables.map(t => t.serverName))].sort();
+        }
+
+        function reassignServer(venueId, tableId, newServer, event) {
+            event.stopPropagation();
+            const venues = TF.loadVenues();
+            const venue = venues.find(v => v.id === venueId);
+            if (!venue) return;
+            const table = venue.tables.find(t => t.id === tableId);
+            if (!table) return;
+            table.serverName = newServer;
+            TF.saveVenues(venues);
+            showToast(`Table #${tableId} → 👤 ${newServer}`);
+            render();
+        }
+
         function tableCard(venueId, t) {
-            const icon = t.status === 'empty' ? '✅' : '🔴';
-            return `<div class="table-card ${t.status}" onclick="toggle(${venueId},${t.id})">
+            const icon = t.status === 'empty' ? '✅' : t.status === 'reserved' ? '⏳' : '🔴';
+            const pulse = lastToggledId === t.id ? ' just-toggled' : '';
+            const servers = getVenueServers(venueId);
+            const serverOptions = servers.map(s =>
+                `<option value="${s}" ${s === t.serverName ? 'selected' : ''}>${s}</option>`
+            ).join('');
+            return `<div class="table-card ${t.status}${pulse}" onclick="toggle(${venueId},${t.id})">
                 <div class="table-number">#${t.id}</div>
                 <div class="table-status">${icon} ${t.status}</div>
                 <div class="table-meta">
                     <span>👥 ${t.seats}</span>
                     ${t.smoking ? '<span>🚬</span>' : ''}
                     ${t.hasWindow ? '<span>🪟</span>' : ''}
-                    <span>👤 ${t.serverName}</span>
                 </div>
-                <div class="tap-hint">tap to toggle</div>
+                <select class="server-select" onclick="event.stopPropagation()" onchange="reassignServer(${venueId},${t.id},this.value,event)" aria-label="Assign server for table ${t.id}">
+                    ${serverOptions}
+                </select>
+                ${t.notes ? `<div class="notes-preview" title="${t.notes.replace(/"/g, '&quot;')}">📝 ${t.notes}</div>` : ''}
+                <button class="notes-toggle" onclick="event.stopPropagation();openNotes(${venueId},${t.id})">${t.notes ? '✏️ Edit note' : '📝 Add note'}</button>
+                <div class="tap-hint">tap to cycle status</div>
             </div>`;
         }
 
         // ---- ACTIONS ----
+        let lastToggledId = null;
         function toggle(venueId, tableId) {
             TF.toggleTable(venueId, tableId);
+            lastToggledId = tableId;
             const venues = TF.loadVenues();
             const table = venues.find(v => v.id === venueId)?.tables.find(t => t.id === tableId);
-            showToast(`Table #${tableId} → ${table?.status === 'empty' ? '✅ Empty' : '🔴 Occupied'}`);
+            const statusLabels = { empty: '✅ Empty', occupied: '🔴 Occupied', reserved: '⏳ Reserved' };
+            showToast(`Table #${tableId} → ${statusLabels[table?.status] || table?.status}`);
             render();
+            // Clear animation flag after animation ends
+            setTimeout(() => { lastToggledId = null; }, 350);
         }
 
         function switchVenue(id) {
@@ -511,6 +641,34 @@
                 showToast('All venues reset to defaults');
                 render();
             }
+        }
+
+        // ---- NOTES MODAL ----
+        let notesVenueId = null, notesTableId = null;
+        function openNotes(venueId, tableId) {
+            notesVenueId = venueId;
+            notesTableId = tableId;
+            const venues = TF.loadVenues();
+            const table = venues.find(v => v.id === venueId)?.tables.find(t => t.id === tableId);
+            document.getElementById('notesModalTitle').textContent = `Table #${tableId} Notes`;
+            document.getElementById('notesTextarea').value = table?.notes || '';
+            const modal = document.getElementById('notesModal');
+            modal.style.display = 'flex';
+            document.getElementById('notesTextarea').focus();
+        }
+        function closeNotes() {
+            document.getElementById('notesModal').style.display = 'none';
+            notesVenueId = null;
+            notesTableId = null;
+        }
+        function saveNotes() {
+            const note = document.getElementById('notesTextarea').value.trim();
+            if (notesVenueId !== null && notesTableId !== null) {
+                TF.setTableNote(notesVenueId, notesTableId, note);
+                showToast(`Table #${notesTableId} note ${note ? 'saved' : 'cleared'}`);
+                render();
+            }
+            closeNotes();
         }
 
         // ---- TOAST ----

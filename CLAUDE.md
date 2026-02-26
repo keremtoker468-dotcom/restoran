@@ -91,14 +91,24 @@ No install step needed. No package.json. No build tools.
 ## What's Implemented
 
 - 3D interactive floor plans with Three.js
-- Real-time cross-tab state sync
+- Real-time cross-tab state sync (BroadcastChannel + localStorage polling)
 - Venue search and filtering (indoor/outdoor/empty)
-- Staff admin panel with one-tap toggles
+- Enhanced table search with attribute filtering (seats, window, smoking, location)
+- Staff admin panel with three-state cycling (empty/occupied/reserved)
 - Bulk actions (mark all, toggle sections)
-- Occupancy statistics and progress bars
+- Occupancy statistics and progress bars (including reserved count)
 - Dark theme with design tokens
-- Mobile responsive layout
-- Toast notifications in admin panel
+- Mobile responsive layout with touch controls (pinch-to-zoom, touch-drag-to-rotate)
+- Toast notifications in admin panel with pulse animations
+- Working 3D/List view toggle (full grid list view in main area)
+- Sidebar collapse toggle visible on all screen sizes
+- Venue details panel (address, phone, hours, rating, features)
+- Hover tooltips on 3D tables showing quick info
+- Branded loading screen with spinner and fade-in
+- Server assignment dropdown per table in admin
+- Table notes feature (admin add/edit, customer read-only)
+- Accessibility: ARIA labels, roles, keyboard navigation, focus styles
+- SEO: meta tags, Open Graph, Twitter Card, robots noindex on admin
 
 ## What's Not Yet Implemented
 
@@ -107,10 +117,6 @@ No install step needed. No package.json. No build tools.
 - User accounts and booking
 - Push notifications
 - Multi-language support (i18n)
-- Reservation status (only empty/occupied, no "reserved" flow)
-- Proper list view toggle (buttons exist but 3D always visible)
-- Accessibility (ARIA labels, keyboard navigation, screen reader support)
-- SEO meta tags and Open Graph
 - Service worker / offline support
 - Error boundaries and graceful degradation
 - Analytics integration

@@ -130,13 +130,16 @@ TF.resetVenues = function () {
     return defaults;
 };
 
+TF.TABLE_STATUSES = ['empty', 'occupied', 'reserved'];
+
 TF.toggleTable = function (venueId, tableId) {
     const venues = TF.loadVenues();
     const venue = venues.find(v => v.id === venueId);
     if (!venue) return venues;
     const table = venue.tables.find(t => t.id === tableId);
     if (!table) return venues;
-    table.status = table.status === 'empty' ? 'occupied' : 'empty';
+    const idx = TF.TABLE_STATUSES.indexOf(table.status);
+    table.status = TF.TABLE_STATUSES[(idx + 1) % TF.TABLE_STATUSES.length];
     TF.saveVenues(venues);
     return venues;
 };
@@ -154,9 +157,10 @@ TF.setAllTables = function (venueId, status) {
 TF.getStats = function (venue) {
     const total = venue.tables.length;
     const occupied = venue.tables.filter(t => t.status === 'occupied').length;
-    const empty = total - occupied;
-    const rate = Math.round((occupied / total) * 100);
-    return { total, occupied, empty, rate };
+    const reserved = venue.tables.filter(t => t.status === 'reserved').length;
+    const empty = total - occupied - reserved;
+    const rate = Math.round(((occupied + reserved) / total) * 100);
+    return { total, occupied, reserved, empty, rate };
 };
 
 TF.calculateDistance = function (lat1, lon1, lat2, lon2) {

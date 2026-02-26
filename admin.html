@@ -236,6 +236,8 @@
         .table-card.empty::before { background: var(--green); }
         .table-card.occupied { border-color: rgba(239,68,68,.3); }
         .table-card.occupied::before { background: var(--red); }
+        .table-card.reserved { border-color: rgba(234,179,8,.3); }
+        .table-card.reserved::before { background: var(--yellow); }
 
         .table-card:active {
             transform: scale(.96);
@@ -252,6 +254,7 @@
         }
         .table-card.empty .table-number { color: var(--green); }
         .table-card.occupied .table-number { color: var(--red); }
+        .table-card.reserved .table-number { color: var(--yellow); }
 
         .table-card .table-status {
             font-size: 11px; font-weight: 700;
@@ -267,6 +270,9 @@
         }
         .table-card.occupied .table-status {
             background: var(--red-dim); color: var(--red);
+        }
+        .table-card.reserved .table-status {
+            background: rgba(234,179,8,.12); color: var(--yellow);
         }
 
         .table-card .table-meta {
@@ -385,7 +391,7 @@
 
     <!-- FOOTER -->
     <div class="admin-footer">
-        TableFinder Pro v2.0 &middot; Tap any table to toggle status &middot; Changes sync live to <a href="index.html">customer view</a>
+        TableFinder Pro v2.0 &middot; Tap any table to cycle: empty → occupied → reserved &middot; Changes sync live to <a href="index.html">customer view</a>
     </div>
 
     <script src="js/data.js"></script>
@@ -431,12 +437,16 @@
                     <div class="value red">${stats.occupied}</div>
                 </div>
                 <div class="stat-card">
+                    <div class="label">Reserved</div>
+                    <div class="value yellow">${stats.reserved}</div>
+                </div>
+                <div class="stat-card">
                     <div class="label">Total</div>
                     <div class="value">${stats.total}</div>
                 </div>
                 <div class="stat-card">
                     <div class="label">Occupancy</div>
-                    <div class="value yellow">${stats.rate}%</div>
+                    <div class="value" style="color:${barColor}">${stats.rate}%</div>
                     <div class="occupancy-bar">
                         <div class="fill" style="width:${stats.rate}%;background:${barColor}"></div>
                     </div>
@@ -455,7 +465,7 @@
         }
 
         function tableCard(venueId, t) {
-            const icon = t.status === 'empty' ? '✅' : '🔴';
+            const icon = t.status === 'empty' ? '✅' : t.status === 'reserved' ? '⏳' : '🔴';
             return `<div class="table-card ${t.status}" onclick="toggle(${venueId},${t.id})">
                 <div class="table-number">#${t.id}</div>
                 <div class="table-status">${icon} ${t.status}</div>
@@ -465,7 +475,7 @@
                     ${t.hasWindow ? '<span>🪟</span>' : ''}
                     <span>👤 ${t.serverName}</span>
                 </div>
-                <div class="tap-hint">tap to toggle</div>
+                <div class="tap-hint">tap to cycle status</div>
             </div>`;
         }
 
@@ -474,7 +484,8 @@
             TF.toggleTable(venueId, tableId);
             const venues = TF.loadVenues();
             const table = venues.find(v => v.id === venueId)?.tables.find(t => t.id === tableId);
-            showToast(`Table #${tableId} → ${table?.status === 'empty' ? '✅ Empty' : '🔴 Occupied'}`);
+            const statusLabels = { empty: '✅ Empty', occupied: '🔴 Occupied', reserved: '⏳ Reserved' };
+            showToast(`Table #${tableId} → ${statusLabels[table?.status] || table?.status}`);
             render();
         }
 

@@ -244,6 +244,8 @@
         }
         .table-item .t-status.empty { background: var(--green-dim); color: var(--green); }
         .table-item .t-status.occupied { background: var(--red-dim); color: var(--red); }
+        .table-item .t-status.reserved { background: rgba(234,179,8,.12); color: var(--yellow); }
+        .table-item .t-num.reserved { background: rgba(234,179,8,.12); color: var(--yellow); }
 
         /* ---- MAIN AREA ---- */
         .main { flex: 1; display: flex; flex-direction: column; }
@@ -867,7 +869,7 @@
                         ${t.smoking ? ' &middot; 🚬' : ''}${t.hasWindow ? ' &middot; 🪟' : ''}
                     </div>
                 </div>
-                <div class="t-status ${t.status}">${t.status === 'empty' ? '✅ Open' : '🔴 Taken'}</div>
+                <div class="t-status ${t.status}">${t.status === 'empty' ? '✅ Open' : t.status === 'reserved' ? '⏳ Held' : '🔴 Taken'}</div>
             </div>`;
         }).join('');
     }
@@ -880,7 +882,8 @@
         document.getElementById('statsOverlay').innerHTML = `
             <div class="s-row"><div class="s-dot" style="background:var(--green)"></div> <strong>${s.empty}</strong>&nbsp;available</div>
             <div class="s-row"><div class="s-dot" style="background:var(--red)"></div> <strong>${s.occupied}</strong>&nbsp;occupied</div>
-            <div class="s-row"><div class="s-dot" style="background:var(--yellow)"></div> <strong>${s.rate}%</strong>&nbsp;full</div>
+            <div class="s-row"><div class="s-dot" style="background:var(--yellow)"></div> <strong>${s.reserved}</strong>&nbsp;reserved</div>
+            <div class="s-row"><div class="s-dot" style="background:var(--accent)"></div> <strong>${s.rate}%</strong>&nbsp;full</div>
         `;
     }
 
@@ -899,7 +902,7 @@
             <h3>Table #${table.id}</h3>
             <div class="detail-row"><span class="label">Status</span>
                 <span class="t-status ${table.status}" style="padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;">
-                    ${table.status === 'empty' ? '✅ Available' : '🔴 Occupied'}
+                    ${table.status === 'empty' ? '✅ Available' : table.status === 'reserved' ? '⏳ Reserved' : '🔴 Occupied'}
                 </span>
             </div>
             <div class="detail-row"><span class="label">Seats</span><span>👥 ${table.seats}</span></div>

@@ -333,55 +333,55 @@
 <body>
 
     <!-- TOP BAR -->
-    <div class="topbar">
+    <header class="topbar" role="banner">
         <div class="topbar-brand">
-            <div class="icon">🍽️</div>
+            <div class="icon" aria-hidden="true">🍽️</div>
             <div>
                 <h1>Table<span>Finder</span> Pro</h1>
                 <small>Staff Control Panel</small>
             </div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;">
-            <div class="live-dot"></div>
-            <span style="font-size:13px;color:var(--text-dim);font-weight:600;" id="clock"></span>
+            <div class="live-dot" aria-hidden="true"></div>
+            <span style="font-size:13px;color:var(--text-dim);font-weight:600;" id="clock" aria-label="Current time"></span>
         </div>
         <div class="topbar-actions">
-            <button onclick="window.open('index.html','_blank')">👁️ Customer View</button>
-            <button class="danger" onclick="resetAll()">↺ Reset All</button>
+            <button onclick="window.open('index.html','_blank')" aria-label="Open customer view in new tab">👁️ Customer View</button>
+            <button class="danger" onclick="resetAll()" aria-label="Reset all tables to default state">↺ Reset All</button>
         </div>
-    </div>
+    </header>
 
     <!-- VENUE TABS -->
-    <div class="venue-tabs" id="venueTabs"></div>
+    <div class="venue-tabs" id="venueTabs" role="tablist" aria-label="Select venue"></div>
 
     <!-- STATS -->
-    <div class="stats-bar" id="statsBar"></div>
+    <div class="stats-bar" id="statsBar" aria-live="polite" aria-label="Venue statistics"></div>
 
     <!-- BULK ACTIONS -->
-    <div class="bulk-actions">
-        <button class="bulk-btn green-action" onclick="setAll('empty')">
+    <div class="bulk-actions" role="toolbar" aria-label="Bulk table actions">
+        <button class="bulk-btn green-action" onclick="setAll('empty')" aria-label="Mark all tables as empty">
             ✅ Mark All Empty
         </button>
-        <button class="bulk-btn red-action" onclick="setAll('occupied')">
+        <button class="bulk-btn red-action" onclick="setAll('occupied')" aria-label="Mark all tables as occupied">
             ❌ Mark All Occupied
         </button>
-        <button class="bulk-btn" onclick="toggleIndoor()">
+        <button class="bulk-btn" onclick="toggleIndoor()" aria-label="Toggle all indoor table statuses">
             🏠 Toggle Indoor
         </button>
-        <button class="bulk-btn" onclick="toggleOutdoor()">
+        <button class="bulk-btn" onclick="toggleOutdoor()" aria-label="Toggle all outdoor table statuses">
             🌳 Toggle Outdoor
         </button>
     </div>
 
     <!-- TABLE GRIDS -->
     <div class="section-label" id="indoorLabel">🏠 INDOOR TABLES</div>
-    <div class="table-grid" id="indoorGrid"></div>
+    <div class="table-grid" id="indoorGrid" role="grid" aria-label="Indoor tables"></div>
 
     <div class="section-label" id="outdoorLabel">🌳 OUTDOOR TABLES</div>
-    <div class="table-grid" id="outdoorGrid"></div>
+    <div class="table-grid" id="outdoorGrid" role="grid" aria-label="Outdoor tables"></div>
 
     <!-- TOAST -->
-    <div class="toast-container" id="toasts"></div>
+    <div class="toast-container" id="toasts" aria-live="polite" role="status"></div>
 
     <!-- FOOTER -->
     <div class="admin-footer">

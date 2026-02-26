@@ -450,61 +450,61 @@
     </style>
 </head>
 <body>
-    <div class="app">
+    <div class="app" role="application" aria-label="TableFinder Pro">
         <!-- SIDEBAR -->
-        <div class="sidebar" id="sidebar">
+        <nav class="sidebar" id="sidebar" role="navigation" aria-label="Venue browser">
             <div class="sidebar-header">
                 <div class="brand">
-                    <div class="brand-icon">🍽️</div>
+                    <div class="brand-icon" aria-hidden="true">🍽️</div>
                     <div>
                         <h1>Table<span>Finder</span> Pro</h1>
                         <small>Real-time availability</small>
                     </div>
                 </div>
-                <div class="live-badge">
-                    <div class="dot"></div>
+                <div class="live-badge" aria-label="Live updates active">
+                    <div class="dot" aria-hidden="true"></div>
                     <span>Live &middot; <span id="clock"></span></span>
                 </div>
             </div>
 
             <div class="search-box">
-                <input type="text" placeholder="Search venues..." id="searchInput" oninput="renderVenueList()">
+                <input type="text" placeholder="Search venues..." id="searchInput" oninput="renderVenueList()" aria-label="Search venues by name or cuisine">
             </div>
 
-            <div class="venue-list" id="venueList"></div>
+            <div class="venue-list" id="venueList" role="list" aria-label="Available venues"></div>
 
-            <div class="filter-bar" id="filterBar">
-                <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">All</button>
-                <button class="filter-btn" data-filter="indoor" onclick="setFilter('indoor',this)">🏠 Indoor</button>
-                <button class="filter-btn" data-filter="outdoor" onclick="setFilter('outdoor',this)">🌳 Outdoor</button>
-                <button class="filter-btn" data-filter="empty" onclick="setFilter('empty',this)">✅ Empty</button>
+            <div class="filter-bar" id="filterBar" role="tablist" aria-label="Table filters">
+                <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)" role="tab" aria-selected="true">All</button>
+                <button class="filter-btn" data-filter="indoor" onclick="setFilter('indoor',this)" role="tab" aria-selected="false">🏠 Indoor</button>
+                <button class="filter-btn" data-filter="outdoor" onclick="setFilter('outdoor',this)" role="tab" aria-selected="false">🌳 Outdoor</button>
+                <button class="filter-btn" data-filter="empty" onclick="setFilter('empty',this)" role="tab" aria-selected="false">✅ Empty</button>
             </div>
 
-            <div class="table-list" id="tableList"></div>
-        </div>
+            <div class="table-list" id="tableList" role="list" aria-label="Tables at selected venue"></div>
+        </nav>
 
         <!-- MAIN -->
-        <div class="main">
-            <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+        <main class="main" role="main">
+            <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Toggle sidebar navigation">☰</button>
             <div class="main-header">
                 <div>
                     <h2 id="mainTitle">Cafe Mocha</h2>
-                    <div class="hint">Drag to rotate &middot; Scroll to zoom &middot; Click tables for details</div>
+                    <div class="hint" aria-hidden="true">Drag to rotate &middot; Scroll to zoom &middot; Click tables for details</div>
                 </div>
-                <div class="view-toggles">
-                    <button class="view-toggle active" id="btn3d" onclick="setView('3d')">🏗️ 3D</button>
-                    <button class="view-toggle" id="btnList" onclick="setView('list')">📋 List</button>
+                <div class="view-toggles" role="tablist" aria-label="View mode">
+                    <button class="view-toggle active" id="btn3d" onclick="setView('3d')" role="tab" aria-selected="true" aria-label="3D floor plan view">🏗️ 3D</button>
+                    <button class="view-toggle" id="btnList" onclick="setView('list')" role="tab" aria-selected="false" aria-label="Table list view">📋 List</button>
                 </div>
             </div>
 
-            <div class="canvas-wrap" id="canvasWrap">
+            <div class="canvas-wrap" id="canvasWrap" aria-label="Interactive 3D floor plan — drag to rotate, scroll to zoom, click tables for details">
                 <!-- 3D scene renders here -->
 
                 <!-- Stats overlay -->
-                <div class="stats-overlay" id="statsOverlay"></div>
+                <div class="stats-overlay" id="statsOverlay" aria-live="polite" aria-label="Venue statistics"></div>
 
                 <!-- Table info overlay (hidden by default) -->
-                <div class="table-overlay" id="tableOverlay" style="display:none;"></div>
+                <div class="table-overlay" id="tableOverlay" style="display:none;" role="dialog" aria-label="Table details"></div>
 
                 <!-- Legend -->
                 <div class="legend">
@@ -916,8 +916,12 @@
 
     function setFilter(f, btn) {
         currentFilter = f;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+        });
         btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
         renderTableList();
     }
 
@@ -926,6 +930,8 @@
         currentView = v;
         document.getElementById('btn3d').classList.toggle('active', v === '3d');
         document.getElementById('btnList').classList.toggle('active', v === 'list');
+        document.getElementById('btn3d').setAttribute('aria-selected', v === '3d' ? 'true' : 'false');
+        document.getElementById('btnList').setAttribute('aria-selected', v === 'list' ? 'true' : 'false');
         document.getElementById('canvasWrap').classList.toggle('hidden', v === 'list');
         document.getElementById('listView').classList.toggle('active', v === 'list');
         if (v === 'list') renderListView();

@@ -289,8 +289,26 @@
             margin: 0 3px;
         }
 
+        .table-card .server-select {
+            margin-top: 8px;
+            width: 100%;
+            padding: 6px 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+            transition: .15s;
+        }
+        .table-card .server-select:focus {
+            border-color: var(--accent);
+        }
+
         .table-card .tap-hint {
-            margin-top: 12px;
+            margin-top: 8px;
             font-size: 11px;
             color: var(--text-dim);
             opacity: .5;
@@ -476,9 +494,33 @@
             document.getElementById('outdoorGrid').innerHTML = outdoor.map(t => tableCard(venue.id, t)).join('');
         }
 
+        function getVenueServers(venueId) {
+            const venues = TF.loadVenues();
+            const venue = venues.find(v => v.id === venueId);
+            if (!venue) return [];
+            return [...new Set(venue.tables.map(t => t.serverName))].sort();
+        }
+
+        function reassignServer(venueId, tableId, newServer, event) {
+            event.stopPropagation();
+            const venues = TF.loadVenues();
+            const venue = venues.find(v => v.id === venueId);
+            if (!venue) return;
+            const table = venue.tables.find(t => t.id === tableId);
+            if (!table) return;
+            table.serverName = newServer;
+            TF.saveVenues(venues);
+            showToast(`Table #${tableId} → 👤 ${newServer}`);
+            render();
+        }
+
         function tableCard(venueId, t) {
             const icon = t.status === 'empty' ? '✅' : t.status === 'reserved' ? '⏳' : '🔴';
             const pulse = lastToggledId === t.id ? ' just-toggled' : '';
+            const servers = getVenueServers(venueId);
+            const serverOptions = servers.map(s =>
+                `<option value="${s}" ${s === t.serverName ? 'selected' : ''}>${s}</option>`
+            ).join('');
             return `<div class="table-card ${t.status}${pulse}" onclick="toggle(${venueId},${t.id})">
                 <div class="table-number">#${t.id}</div>
                 <div class="table-status">${icon} ${t.status}</div>
@@ -486,8 +528,10 @@
                     <span>👥 ${t.seats}</span>
                     ${t.smoking ? '<span>🚬</span>' : ''}
                     ${t.hasWindow ? '<span>🪟</span>' : ''}
-                    <span>👤 ${t.serverName}</span>
                 </div>
+                <select class="server-select" onclick="event.stopPropagation()" onchange="reassignServer(${venueId},${t.id},this.value,event)" aria-label="Assign server for table ${t.id}">
+                    ${serverOptions}
+                </select>
                 <div class="tap-hint">tap to cycle status</div>
             </div>`;
         }

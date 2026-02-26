@@ -485,6 +485,42 @@
         .list-view .lv-badge.occupied { background: var(--red-dim); color: var(--red); }
         .list-view .lv-badge.reserved { background: rgba(234,179,8,.12); color: var(--yellow); }
 
+        /* ---- LOADING SCREEN ---- */
+        .loading-screen {
+            position: fixed; inset: 0; z-index: 1000;
+            background: var(--bg);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 20px;
+            transition: opacity .4s ease;
+        }
+        .loading-screen.fade-out { opacity: 0; pointer-events: none; }
+        .loading-spinner {
+            width: 48px; height: 48px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-screen .brand-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            border-radius: 16px;
+            display: grid; place-items: center;
+            font-size: 28px;
+        }
+        .loading-screen h2 {
+            font-size: 22px; font-weight: 800;
+            letter-spacing: -.3px;
+        }
+        .loading-screen h2 span { color: var(--accent); }
+        .loading-screen p { font-size: 13px; color: var(--text-dim); }
+
+        /* ---- FADE-IN CONTENT ---- */
+        .app { opacity: 0; transition: opacity .3s ease; }
+        .app.loaded { opacity: 1; }
+
         /* ---- FOCUS STYLES ---- */
         .venue-card:focus, .table-item:focus, .lv-card:focus,
         .filter-btn:focus-visible, .view-toggle:focus-visible,
@@ -509,7 +545,15 @@
     </style>
 </head>
 <body>
-    <div class="app" role="application" aria-label="TableFinder Pro">
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="brand-icon">🍽️</div>
+        <h2>Table<span>Finder</span> Pro</h2>
+        <div class="loading-spinner"></div>
+        <p>Loading 3D floor plans...</p>
+    </div>
+
+    <div class="app" id="app" role="application" aria-label="TableFinder Pro">
         <!-- SIDEBAR -->
         <nav class="sidebar" id="sidebar" role="navigation" aria-label="Venue browser">
             <div class="sidebar-header">
@@ -1184,6 +1228,15 @@
     }
     init3D();
     fullRender();
+
+    // Fade out loading screen, fade in app
+    requestAnimationFrame(() => {
+        const loader = document.getElementById('loadingScreen');
+        const app = document.getElementById('app');
+        loader.classList.add('fade-out');
+        app.classList.add('loaded');
+        setTimeout(() => loader.remove(), 500);
+    });
     </script>
 </body>
 </html>

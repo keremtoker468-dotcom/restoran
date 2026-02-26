@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TableFinder Pro — Staff Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0c0e13;
+            --surface: #15171e;
+            --surface-2: #1c1f28;
+            --border: #2a2d38;
+            --text: #e4e4e7;
+            --text-dim: #71717a;
+            --accent: #6366f1;
+            --accent-glow: rgba(99,102,241,.25);
+            --green: #22c55e;
+            --green-dim: rgba(34,197,94,.12);
+            --red: #ef4444;
+            --red-dim: rgba(239,68,68,.12);
+            --yellow: #eab308;
+            --radius: 14px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ---- TOP BAR ---- */
+        .topbar {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 24px;
+            background: rgba(12,14,19,.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+        .topbar-brand {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .topbar-brand .icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            border-radius: 10px;
+            display: grid; place-items: center;
+            font-size: 18px;
+        }
+        .topbar-brand h1 {
+            font-size: 18px; font-weight: 800;
+            letter-spacing: -.3px;
+        }
+        .topbar-brand h1 span { color: var(--accent); }
+        .topbar-brand small {
+            display: block; font-size: 11px;
+            color: var(--text-dim); font-weight: 500;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .live-dot {
+            width: 8px; height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--green);
+            animation: blink 2s ease infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        .topbar-actions { display: flex; gap: 10px; }
+        .topbar-actions button {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer;
+            transition: .15s;
+        }
+        .topbar-actions button:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+        .topbar-actions button.danger:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        /* ---- VENUE TABS ---- */
+        .venue-tabs {
+            display: flex; gap: 8px;
+            padding: 16px 24px 0;
+            overflow-x: auto;
+        }
+        .venue-tab {
+            padding: 10px 20px;
+            border-radius: 10px 10px 0 0;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            background: var(--surface);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 14px; font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: .15s;
+        }
+        .venue-tab.active {
+            background: var(--surface-2);
+            color: var(--text);
+            border-color: var(--accent);
+            border-bottom: 2px solid var(--surface-2);
+            position: relative;
+        }
+        .venue-tab .tab-count {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .venue-tab .tab-count.ok { background: var(--green-dim); color: var(--green); }
+        .venue-tab .tab-count.full { background: var(--red-dim); color: var(--red); }
+
+        /* ---- STATS BAR ---- */
+        .stats-bar {
+            display: flex; gap: 12px;
+            padding: 20px 24px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            flex: 1; min-width: 140px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+        }
+        .stat-card .label {
+            font-size: 11px; font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 6px;
+        }
+        .stat-card .value {
+            font-size: 28px; font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -1px;
+        }
+        .stat-card .value.green { color: var(--green); }
+        .stat-card .value.red { color: var(--red); }
+        .stat-card .value.yellow { color: var(--yellow); }
+
+        .occupancy-bar {
+            margin-top: 10px; height: 6px;
+            background: var(--surface-2);
+            border-radius: 3px; overflow: hidden;
+        }
+        .occupancy-bar .fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .4s ease;
+        }
+
+        /* ---- BULK ACTIONS ---- */
+        .bulk-actions {
+            display: flex; gap: 10px;
+            padding: 0 24px 16px;
+            flex-wrap: wrap;
+        }
+        .bulk-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer;
+            transition: .15s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .bulk-btn:hover { border-color: var(--accent); }
+        .bulk-btn.green-action:hover { border-color: var(--green); background: var(--green-dim); }
+        .bulk-btn.red-action:hover { border-color: var(--red); background: var(--red-dim); }
+
+        /* ---- TABLE GRID ---- */
+        .section-label {
+            padding: 0 24px 12px;
+            font-size: 12px; font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 12px;
+            padding: 0 24px 32px;
+        }
+
+        .table-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 16px;
+            cursor: pointer;
+            transition: .2s;
+            text-align: center;
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .table-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 4px;
+            transition: .2s;
+        }
+        .table-card.empty { border-color: rgba(34,197,94,.3); }
+        .table-card.empty::before { background: var(--green); }
+        .table-card.occupied { border-color: rgba(239,68,68,.3); }
+        .table-card.occupied::before { background: var(--red); }
+
+        .table-card:active {
+            transform: scale(.96);
+        }
+        .table-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .table-card .table-number {
+            font-size: 24px; font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 6px;
+        }
+        .table-card.empty .table-number { color: var(--green); }
+        .table-card.occupied .table-number { color: var(--red); }
+
+        .table-card .table-status {
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .table-card.empty .table-status {
+            background: var(--green-dim); color: var(--green);
+        }
+        .table-card.occupied .table-status {
+            background: var(--red-dim); color: var(--red);
+        }
+
+        .table-card .table-meta {
+            font-size: 12px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+        .table-card .table-meta span {
+            display: inline-block;
+            margin: 0 3px;
+        }
+
+        .table-card .tap-hint {
+            margin-top: 12px;
+            font-size: 11px;
+            color: var(--text-dim);
+            opacity: .5;
+        }
+
+        /* ---- TOAST ---- */
+        .toast-container {
+            position: fixed; bottom: 24px; right: 24px;
+            z-index: 200; display: flex; flex-direction: column; gap: 8px;
+        }
+        .toast {
+            padding: 12px 20px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px; font-weight: 600;
+            color: var(--text);
+            animation: slideUp .3s ease;
+            display: flex; align-items: center; gap: 10px;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- FOOTER ---- */
+        .admin-footer {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-dim);
+            text-align: center;
+        }
+        .admin-footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* ---- RESPONSIVE ---- */
+        @media (max-width: 600px) {
+            .topbar { padding: 12px 16px; }
+            .stats-bar { padding: 12px 16px; }
+            .table-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); padding: 0 16px 24px; gap: 10px; }
+            .bulk-actions { padding: 0 16px 12px; }
+            .section-label { padding: 0 16px 10px; }
+            .venue-tabs { padding: 12px 16px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <div class="topbar-brand">
+            <div class="icon">🍽️</div>
+            <div>
+                <h1>Table<span>Finder</span> Pro</h1>
+                <small>Staff Control Panel</small>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="live-dot"></div>
+            <span style="font-size:13px;color:var(--text-dim);font-weight:600;" id="clock"></span>
+        </div>
+        <div class="topbar-actions">
+            <button onclick="window.open('index.html','_blank')">👁️ Customer View</button>
+            <button class="danger" onclick="resetAll()">↺ Reset All</button>
+        </div>
+    </div>
+
+    <!-- VENUE TABS -->
+    <div class="venue-tabs" id="venueTabs"></div>
+
+    <!-- STATS -->
+    <div class="stats-bar" id="statsBar"></div>
+
+    <!-- BULK ACTIONS -->
+    <div class="bulk-actions">
+        <button class="bulk-btn green-action" onclick="setAll('empty')">
+            ✅ Mark All Empty
+        </button>
+        <button class="bulk-btn red-action" onclick="setAll('occupied')">
+            ❌ Mark All Occupied
+        </button>
+        <button class="bulk-btn" onclick="toggleIndoor()">
+            🏠 Toggle Indoor
+        </button>
+        <button class="bulk-btn" onclick="toggleOutdoor()">
+            🌳 Toggle Outdoor
+        </button>
+    </div>
+
+    <!-- TABLE GRIDS -->
+    <div class="section-label" id="indoorLabel">🏠 INDOOR TABLES</div>
+    <div class="table-grid" id="indoorGrid"></div>
+
+    <div class="section-label" id="outdoorLabel">🌳 OUTDOOR TABLES</div>
+    <div class="table-grid" id="outdoorGrid"></div>
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toasts"></div>
+
+    <!-- FOOTER -->
+    <div class="admin-footer">
+        TableFinder Pro v2.0 &middot; Tap any table to toggle status &middot; Changes sync live to <a href="index.html">customer view</a>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script>
+        let activeVenueId = 1;
+
+        // ---- CLOCK ----
+        function updateClock() {
+            document.getElementById('clock').textContent =
+                new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // ---- RENDER ----
+        function render() {
+            const venues = TF.loadVenues();
+            const venue = venues.find(v => v.id === activeVenueId);
+            if (!venue) return;
+
+            // Tabs
+            const tabsEl = document.getElementById('venueTabs');
+            tabsEl.innerHTML = venues.map(v => {
+                const s = TF.getStats(v);
+                const isActive = v.id === activeVenueId;
+                const countClass = s.empty > 0 ? 'ok' : 'full';
+                return `<button class="venue-tab ${isActive ? 'active' : ''}" onclick="switchVenue(${v.id})">
+                    ${v.name}
+                    <span class="tab-count ${countClass}">${s.empty}/${s.total}</span>
+                </button>`;
+            }).join('');
+
+            // Stats
+            const stats = TF.getStats(venue);
+            const barColor = stats.rate > 80 ? 'var(--red)' : stats.rate > 50 ? 'var(--yellow)' : 'var(--green)';
+            document.getElementById('statsBar').innerHTML = `
+                <div class="stat-card">
+                    <div class="label">Available</div>
+                    <div class="value green">${stats.empty}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Occupied</div>
+                    <div class="value red">${stats.occupied}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Total</div>
+                    <div class="value">${stats.total}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Occupancy</div>
+                    <div class="value yellow">${stats.rate}%</div>
+                    <div class="occupancy-bar">
+                        <div class="fill" style="width:${stats.rate}%;background:${barColor}"></div>
+                    </div>
+                </div>
+            `;
+
+            // Tables
+            const indoor = venue.tables.filter(t => t.location === 'indoor');
+            const outdoor = venue.tables.filter(t => t.location === 'outdoor');
+
+            document.getElementById('indoorLabel').textContent = `🏠 INDOOR TABLES (${indoor.length})`;
+            document.getElementById('outdoorLabel').textContent = `🌳 OUTDOOR TABLES (${outdoor.length})`;
+
+            document.getElementById('indoorGrid').innerHTML = indoor.map(t => tableCard(venue.id, t)).join('');
+            document.getElementById('outdoorGrid').innerHTML = outdoor.map(t => tableCard(venue.id, t)).join('');
+        }
+
+        function tableCard(venueId, t) {
+            const icon = t.status === 'empty' ? '✅' : '🔴';
+            return `<div class="table-card ${t.status}" onclick="toggle(${venueId},${t.id})">
+                <div class="table-number">#${t.id}</div>
+                <div class="table-status">${icon} ${t.status}</div>
+                <div class="table-meta">
+                    <span>👥 ${t.seats}</span>
+                    ${t.smoking ? '<span>🚬</span>' : ''}
+                    ${t.hasWindow ? '<span>🪟</span>' : ''}
+                    <span>👤 ${t.serverName}</span>
+                </div>
+                <div class="tap-hint">tap to toggle</div>
+            </div>`;
+        }
+
+        // ---- ACTIONS ----
+        function toggle(venueId, tableId) {
+            TF.toggleTable(venueId, tableId);
+            const venues = TF.loadVenues();
+            const table = venues.find(v => v.id === venueId)?.tables.find(t => t.id === tableId);
+            showToast(`Table #${tableId} → ${table?.status === 'empty' ? '✅ Empty' : '🔴 Occupied'}`);
+            render();
+        }
+
+        function switchVenue(id) {
+            activeVenueId = id;
+            render();
+        }
+
+        function setAll(status) {
+            TF.setAllTables(activeVenueId, status);
+            showToast(`All tables marked ${status === 'empty' ? '✅ empty' : '🔴 occupied'}`);
+            render();
+        }
+
+        function toggleIndoor() {
+            const venues = TF.loadVenues();
+            const venue = venues.find(v => v.id === activeVenueId);
+            venue.tables.filter(t => t.location === 'indoor').forEach(t => {
+                t.status = t.status === 'empty' ? 'occupied' : 'empty';
+            });
+            TF.saveVenues(venues);
+            showToast('Indoor tables toggled');
+            render();
+        }
+
+        function toggleOutdoor() {
+            const venues = TF.loadVenues();
+            const venue = venues.find(v => v.id === activeVenueId);
+            venue.tables.filter(t => t.location === 'outdoor').forEach(t => {
+                t.status = t.status === 'empty' ? 'occupied' : 'empty';
+            });
+            TF.saveVenues(venues);
+            showToast('Outdoor tables toggled');
+            render();
+        }
+
+        function resetAll() {
+            if (confirm('Reset all venues to defaults?')) {
+                TF.resetVenues();
+                showToast('All venues reset to defaults');
+                render();
+            }
+        }
+
+        // ---- TOAST ----
+        function showToast(msg) {
+            const el = document.createElement('div');
+            el.className = 'toast';
+            el.innerHTML = `<span>${msg}</span>`;
+            document.getElementById('toasts').appendChild(el);
+            setTimeout(() => el.remove(), 2500);
+        }
+
+        // ---- LISTEN FOR CROSS-TAB SYNC ----
+        TF.channel.onmessage = () => render();
+
+        // ---- INIT ----
+        // Seed defaults if first load
+        if (!localStorage.getItem(TF.STORAGE_KEY)) {
+            TF.saveVenues(JSON.parse(JSON.stringify(TF.DEFAULT_VENUES)));
+        }
+        render();
+    </script>
+</body>
+</html>

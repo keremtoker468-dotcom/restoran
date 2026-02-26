@@ -375,6 +375,49 @@
             width: 12px; height: 12px; border-radius: 4px;
         }
 
+        /* ---- VENUE DETAIL PANEL ---- */
+        .venue-detail-panel {
+            position: absolute; top: 20px; right: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            min-width: 300px; max-width: 360px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.4);
+            animation: fadeIn .2s ease;
+            z-index: 15;
+        }
+        .venue-detail-panel .close-btn {
+            position: absolute; top: 12px; right: 12px;
+            background: none; border: none;
+            color: var(--text-dim); font-size: 18px;
+            cursor: pointer;
+        }
+        .venue-detail-panel h3 {
+            font-size: 20px; font-weight: 800; margin-bottom: 4px;
+        }
+        .venue-detail-panel .vd-cuisine {
+            font-size: 13px; color: var(--text-dim); margin-bottom: 16px;
+        }
+        .venue-detail-panel .vd-row {
+            display: flex; justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        .venue-detail-panel .vd-row:last-child { border-bottom: none; }
+        .venue-detail-panel .vd-row .label { color: var(--text-dim); }
+        .venue-detail-panel .vd-features {
+            display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px;
+        }
+        .venue-detail-panel .vd-features span {
+            padding: 4px 10px;
+            background: var(--surface-2);
+            border-radius: 6px;
+            font-size: 11px; color: var(--text-dim);
+            border: 1px solid var(--border);
+        }
+
         /* ---- LIST VIEW ---- */
         .list-view {
             flex: 1; overflow-y: auto;
@@ -504,8 +547,11 @@
         <main class="main" role="main">
             <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Toggle sidebar navigation">☰</button>
             <div class="main-header">
-                <div>
+                <div style="display:flex;align-items:center;gap:10px;">
                     <h2 id="mainTitle">Cafe Mocha</h2>
+                    <button onclick="toggleVenueDetail()" aria-label="Show venue details" style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text-dim);cursor:pointer;padding:4px 10px;font-size:14px;transition:.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">ℹ️</button>
+                </div>
+                <div>
                     <div class="hint" aria-hidden="true">Drag to rotate &middot; Scroll to zoom &middot; Click tables for details</div>
                 </div>
                 <div class="view-toggles" role="tablist" aria-label="View mode">
@@ -519,6 +565,9 @@
 
                 <!-- Stats overlay -->
                 <div class="stats-overlay" id="statsOverlay" aria-live="polite" aria-label="Venue statistics"></div>
+
+                <!-- Venue detail panel (hidden by default) -->
+                <div class="venue-detail-panel" id="venueDetailPanel" style="display:none;" role="dialog" aria-label="Venue details"></div>
 
                 <!-- Table info overlay (hidden by default) -->
                 <div class="table-overlay" id="tableOverlay" style="display:none;" role="dialog" aria-label="Table details"></div>
@@ -959,6 +1008,8 @@
     function switchVenue(id) {
         activeVenueId = id;
         selectedTableId = null;
+        venueDetailOpen = false;
+        document.getElementById('venueDetailPanel').style.display = 'none';
         const venues = TF.loadVenues();
         const venue = venues.find(v => v.id === id);
         document.getElementById('mainTitle').textContent = venue?.name || '';
@@ -1038,6 +1089,33 @@
             </div>
             <div class="lv-badge ${t.status}">${statusLabel}</div>
         </div>`;
+    }
+
+    let venueDetailOpen = false;
+    function toggleVenueDetail() {
+        venueDetailOpen = !venueDetailOpen;
+        const el = document.getElementById('venueDetailPanel');
+        if (!venueDetailOpen) { el.style.display = 'none'; return; }
+
+        const venues = TF.loadVenues();
+        const venue = venues.find(v => v.id === activeVenueId);
+        if (!venue) { el.style.display = 'none'; return; }
+
+        el.style.display = 'block';
+        el.innerHTML = `
+            <button class="close-btn" onclick="toggleVenueDetail()">✕</button>
+            <h3>${venue.name}</h3>
+            <div class="vd-cuisine">${venue.cuisine} &middot; ${venue.priceRange}</div>
+            <div class="vd-row"><span class="label">Address</span><span>${venue.address}</span></div>
+            <div class="vd-row"><span class="label">Phone</span><span>${venue.phone}</span></div>
+            <div class="vd-row"><span class="label">Hours</span><span>${venue.openHours}</span></div>
+            <div class="vd-row"><span class="label">Rating</span><span>⭐ ${venue.rating} (${venue.reviewCount} reviews)</span></div>
+            <div class="vd-row"><span class="label">Avg Wait</span><span>${venue.avgWaitTime} min</span></div>
+            <div class="vd-row"><span class="label">Reservations</span><span>${venue.acceptsReservations ? '✅ Yes' : '❌ No'}</span></div>
+            <div class="vd-features">
+                ${venue.features.map(f => `<span>${f}</span>`).join('')}
+            </div>
+        `;
     }
 
     function toggleSidebar() {

@@ -440,6 +440,20 @@
         .list-view .lv-badge.occupied { background: var(--red-dim); color: var(--red); }
         .list-view .lv-badge.reserved { background: rgba(234,179,8,.12); color: var(--yellow); }
 
+        /* ---- FOCUS STYLES ---- */
+        .venue-card:focus, .table-item:focus, .lv-card:focus,
+        .filter-btn:focus-visible, .view-toggle:focus-visible,
+        .sidebar-toggle:focus-visible, button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+        .venue-card, .table-item, .lv-card { outline: none; }
+        .venue-card:focus-visible, .table-item:focus-visible, .lv-card:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            box-shadow: 0 0 16px var(--accent-glow);
+        }
+
         @media (max-width: 768px) {
             .sidebar { position: absolute; z-index: 50; height: 100vh; }
             .sidebar.collapsed { width: 0; }
@@ -812,7 +826,7 @@
             .map(v => {
                 const s = TF.getStats(v);
                 const active = v.id === activeVenueId;
-                return `<div class="venue-card ${active ? 'active' : ''}" onclick="switchVenue(${v.id})">
+                return `<div class="venue-card ${active ? 'active' : ''}" onclick="switchVenue(${v.id})" tabindex="0" role="listitem" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchVenue(${v.id})}">
                     <div class="venue-name">${v.name}</div>
                     <div class="venue-meta">
                         <span>${v.cuisine}</span>
@@ -844,7 +858,7 @@
 
         document.getElementById('tableList').innerHTML = tables.map(t => {
             const sel = selectedTableId === t.id;
-            return `<div class="table-item ${sel ? 'selected' : ''}" onclick="selectTable(${t.id})">
+            return `<div class="table-item ${sel ? 'selected' : ''}" onclick="selectTable(${t.id})" tabindex="0" role="listitem" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTable(${t.id})}">
                 <div class="t-num ${t.status}">${t.id}</div>
                 <div class="t-info">
                     <div class="t-label">Table #${t.id}</div>
@@ -1031,6 +1045,15 @@
             fullRender();
         }
     }, 1500);
+
+    // ==================== KEYBOARD NAVIGATION ====================
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            if (selectedTableId !== null) {
+                selectTable(null);
+            }
+        }
+    });
 
     // ==================== INIT ====================
     if (!localStorage.getItem(TF.STORAGE_KEY)) {
